@@ -14,8 +14,6 @@
   .quote{background:#fff;border-radius:10px;padding:22px;box-shadow:0 4px 10px rgba(0,0,0,.08);margin-top:14px;border-left:5px solid #3b5bdb}
   .quote .q{font-size:22px;line-height:1.55;font-style:italic;color:#333;margin:10px 0 16px}
   .quote .author{font-weight:700;color:#555}
-  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .tags span{background:#eef1f8;color:#364fc7;border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600}
   button{padding:9px 15px;font-size:14px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb}
   button:hover{filter:brightness(1.08)}
   button:disabled{background:#c8ccd8;cursor:not-allowed}
@@ -43,7 +41,8 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
 const { useState, useEffect } = React;
-const API = 'https://api.quotable.io';
+const API = 'https://dummyjson.com';
+const norm = (raw) => ({ id: raw.id, content: raw.quote, author: raw.author, tags: [] });
 
 function useQuotes() {
   const [loading, setLoading] = useState(true);
@@ -56,11 +55,18 @@ function useQuotes() {
   const fetchOne = async (author = '') => {
     setLoading(true); setError(null);
     try {
-      let url = `${API}/random`;
-      if (author.trim()) url = `${API}/random?author=${encodeURIComponent(author.trim())}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(res.status === 404 ? `Автор "${author}" не найден` : `Ошибка HTTP: ${res.status}`);
-      setQuote(await res.json());
+      if (author.trim()) {
+        const res = await fetch(`${API}/quotes/search?q=${encodeURIComponent(author.trim())}`);
+        if (!res.ok) throw new Error(`Ошибка HTTP: ${res.status}`);
+        const data = await res.json();
+        const list = data.quotes || [];
+        if (list.length === 0) throw new Error(`Автор "${author}" не найден`);
+        setQuote(norm(list[Math.floor(Math.random() * list.length)]));
+      } else {
+        const res = await fetch(`${API}/quotes/random`);
+        if (!res.ok) throw new Error(`Ошибка HTTP: ${res.status}`);
+        setQuote(norm(await res.json()));
+      }
     } catch (e) { setError(e.message); setQuote(null); }
     finally { setLoading(false); }
   };
@@ -95,7 +101,6 @@ function Task1() {
         <div className="quote">
           <p className="q">«{quote.content}»</p>
           <span className="author">— {quote.author}</span>
-          <div className="tags">{quote.tags.map(t => <span key={t}>#{t}</span>)}</div>
         </div>
       )}
       {toast && <div className="toast">{toast}</div>}
@@ -115,7 +120,7 @@ function Task2() {
       const res = await fetch(`${API}/quotes?limit=${count}`);
       if (!res.ok) throw new Error('Не удалось загрузить');
       const data = await res.json();
-      setQuotes(data.results);
+      setQuotes((data.quotes || []).map(norm));
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };
@@ -133,7 +138,7 @@ function Task2() {
       {error && <div className="err">❌ {error}</div>}
       <div className="quoteList">
         {quotes.map((q, i) => (
-          <div className="item" key={q._id}>
+          <div className="item" key={q.id}>
             <span>«{q.content}» — <b>{q.author}</b></span>
             <span className="meta">#{i + 1}</span>
           </div>
@@ -144,7 +149,7 @@ function Task2() {
 }
 
 function Task3() {
-  const { loading, error, quote } = useQuotes();
+  const { loading, error, quote, fetchOne } = useQuotes();
   const [text, setText] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [called, setCalled] = useState(false);
@@ -152,9 +157,11 @@ function Task3() {
   const searchAuthors = async (q) => {
     if (q.trim().length < 2) { setSuggestions([]); return; }
     try {
-      const res = await fetch(`${API}/search/authors?query=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`${API}/quotes/search?q=${encodeURIComponent(q.trim())}`);
       const data = await res.json();
-      setSuggestions(data.results || []);
+      const seen = new Set(); const arr = [];
+      (data.quotes || []).forEach(qo => { const a = qo.author; if (a && !seen.has(a)) { seen.add(a); arr.push({ name: a }); } });
+      setSuggestions(arr);
     } catch { setSuggestions([]); }
   };
 
@@ -167,15 +174,15 @@ function Task3() {
         {suggestions.length > 0 && (
           <ul className="suggest">
             {suggestions.slice(0, 6).map(s => (
-              <li key={s.slug} onClick={() => { setText(s.name); setSuggestions([]); }}>
-                {s.name} <small style={{ color: '#868e96' }}>({s.quoteCount} цитат)</small>
+              <li key={s.name} onClick={() => { setText(s.name); setSuggestions([]); }}>
+                {s.name}
               </li>
             ))}
           </ul>
         )}
       </div>
       <div style={{ marginTop: 10 }}>
-        <button disabled={!text.trim()} onClick={() => { setCalled(true); }}>Показать цитату автора</button>
+        <button disabled={!text.trim()} onClick={() => { setCalled(true); fetchOne(text); }}>Показать цитату автора</button>
       </div>
       {called && !loading && !error && quote && (
         <div className="quote"><p className="q">«{quote.content}»</p><span className="author">— {quote.author}</span></div>
@@ -189,12 +196,12 @@ function Task4() {
   const [favorites, setFavorites] = useState(() => { try { return JSON.parse(localStorage.getItem('pr30-fav') || '[]'); } catch { return []; } });
   useEffect(() => { localStorage.setItem('pr30-fav', JSON.stringify(favorites)); }, [favorites]);
 
-  const isFav = quote && favorites.some(f => f._id === quote._id);
+  const isFav = quote && favorites.some(f => f.id === quote.id);
   const toggle = () => {
     if (!quote) return;
-    setFavorites(prev => isFav ? prev.filter(f => f._id !== quote._id) : [quote, ...prev]);
+    setFavorites(prev => isFav ? prev.filter(f => f.id !== quote.id) : [quote, ...prev]);
   };
-  const removeFav = (id) => setFavorites(prev => prev.filter(f => f._id !== id));
+  const removeFav = (id) => setFavorites(prev => prev.filter(f => f.id !== id));
 
   return (
     <div>
@@ -209,9 +216,9 @@ function Task4() {
       {favorites.length === 0 && <div className="loading">Пока пусто. Добавьте цитату кнопкой выше.</div>}
       <ul className="favList">
         {favorites.map(f => (
-          <li key={f._id}>
+          <li key={f.id}>
             <div><span>«{f.content}» — <b>{f.author}</b></span></div>
-            <button className="btn-red" style={{ marginTop: 6, fontSize: 12, padding: '4px 10px' }} onClick={() => removeFav(f._id)}>Удалить</button>
+            <button className="btn-red" style={{ marginTop: 6, fontSize: 12, padding: '4px 10px' }} onClick={() => removeFav(f.id)}>Удалить</button>
           </li>
         ))}
       </ul>
@@ -230,10 +237,10 @@ function Task5() {
   const loadPage = async (p) => {
     setLoading(true); setError('');
     try {
-      const res = await fetch(`${API}/quotes?page=${p}&limit=${limit}`);
+      const res = await fetch(`${API}/quotes?limit=${limit}&skip=${(p - 1) * limit}`);
       if (!res.ok) throw new Error('Ошибка загрузки');
       const data = await res.json();
-      setList(data.results); setTotalPages(data.totalPages || 1);
+      setList((data.quotes || []).map(norm)); setTotalPages(Math.max(1, Math.ceil((data.total || 0) / limit)));
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };
@@ -247,7 +254,7 @@ function Task5() {
       {error && <div className="err">❌ {error}</div>}
       {loading && <div className="loading"><div className="spinner" /></div>}
       <div className="quoteList">
-        {list.map(q => <div className="item" key={q._id}><span>«{q.content}» — <b>{q.author}</b></span></div>)}
+        {list.map(q => <div className="item" key={q.id}><span>«{q.content}» — <b>{q.author}</b></span></div>)}
       </div>
       <div className="pager">
         <button disabled={page <= 1} onClick={() => go(page - 1)}>← Назад</button>
@@ -275,7 +282,7 @@ function Task7() {
 
   return (
     <div>
-      <p style={{ color: '#495057' }}>«Цитата дня» с градиентным фоном, эффектом печатной машинки и кнопкой смены темы оформления.</p>
+      <p style={{ color: '#495057' }}>«Цитата дня» с градиентным фоном, эффектом печатной машинки и кнопкой смены цитаты.</p>
       <div className="form"><button onClick={() => fetchOne()}>🔄 Новая цитата дня</button></div>
       {loading && <div className="loading"><div className="spinner" /></div>}
       {error && <div className="err">❌ {error}</div>}
@@ -283,7 +290,6 @@ function Task7() {
         <div className="gradWrap">
           <div className="q">{display || '...'}</div>
           <div style={{ marginTop: 14, fontWeight: 700, opacity: .9 }}>— {quote.author}</div>
-          <div className="tags" style={{ marginTop: 10 }}>{quote.tags.map(t => <span key={t} style={{ background: 'rgba(255,255,255,.2)', color: '#fff' }}>#{t}</span>)}</div>
         </div>
       )}
     </div>

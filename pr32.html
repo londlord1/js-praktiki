@@ -130,7 +130,7 @@ function MainFilters() {
           <option value="all">Все</option><option value="male">👨 Мужчины</option><option value="female">👩 Женщины</option>
         </select>
         <select value={lengthFilter} onChange={e => setLengthFilter(e.target.value)}>
-          <option value="all">Любая длина</option><option value="short">Короткие (≤10) имени+фамилии</option><option value="long">Длинные (>10)</option>
+          <option value="all">Любая длина</option><option value="short">Короткие (до 10 символов)</option><option value="long">Длинные (более 10 символов)</option>
         </select>
         <button className="btn-green" onClick={() => setSortAsc(!sortAsc)}>{sortAsc ? '⬆ А-Я' : '⬇ Я-А'}</button>
         <button className="btn-orange" onClick={exportTxt} disabled={filtered.length === 0}>📥 Экспорт ({filtered.length})</button>
@@ -225,7 +225,7 @@ function App() {
     <div className="wrap">
       <div className="task">
         <h2>Задание 1–2: Больше данных + фильтр по длине имени</h2>
-        <p style={{ color: '#495057' }}>Добавлено 25 записей (включая имена на других языках). Фильтр по длине полного имени (≤10 / &gt;10).</p>
+        <p style={{ color: '#495057' }}>Добавлено 25 записей (включая имена на других языках). Фильтр по длине полного имени (до 10 / более 10 символов).</p>
         <MainFilters />
       </div>
       <div className="task">

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР11 — Контроль за событиями в окне браузера</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.badge{display:inline-block;background:#eef1f8;border:1px solid #c9d1e0;border-radius:20px;padding:4px 12px;font-size:13px}
+.badge.desktop{background:#28a745;color:#fff;border-color:#28a745}
+.badge.tablet{background:#f9a825;color:#fff;border-color:#f9a825}
+.badge.mobile{background:#dc3545;color:#fff;border-color:#dc3545}
+#toTop{display:none;position:fixed;right:24px;bottom:24px;background:#3b5bdb;color:#fff;border:none;border-radius:50%;width:50px;height:50px;font-size:22px;cursor:pointer;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px}
+.stat-item{background:#eef1f8;border-radius:8px;padding:12px;text-align:center}
+.stat-item .num{font-size:24px;font-weight:bold;color:#3b5bdb}
+.crumb{display:inline-block;background:#eef1f8;border-radius:6px;padding:4px 10px;margin:3px}
+.crumb.sep{background:none;padding:0;color:#788}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<button id="toTop" title="Наверх">↑</button>
+<div class="topbar">
+    <h1>ПР11 — Контроль за событиями в окне браузера</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Отслеживание системных событий окна.</div>
+
+<section class="card">
+    <h2>Задание 1: Адаптивный дизайн через resize</h2>
+    <p class="hint">Ширина окна определяет брейкпоинт (мобильный / планшет / десктоп). Цветовая схема меняется автоматически при изменении размера.</p>
+    <div class="row">
+        <span class="badge" id="breakpointBadge">Определяем...</span>
+        <span style="color:#667;">Ширина: <strong id="widthDisplay">—</strong>px</span>
+    </div>
+    <div id="breakpointDemo" style="margin-top:10px;border:1px solid #c9d1e0;border-radius:8px;padding:16px;text-align:center;transition:background .3s;">
+        Текущий брейкпоинт отображается выше.
+    </div>
+    <div class="output" id="resizeOutput">Изменений размера: 0</div>
+</section>
+
+<section class="card">
+    <h2>Задание 2: Умный скролл</h2>
+    <p class="hint">Кнопка «Наверх» появляется после прокрутки более 300px. Используйте кнопку в правом нижнем углу экрана.</p>
+    <div id="scrollTarget" style="border:1px solid #c9d1e0;border-radius:8px;padding:16px;max-height:220px;overflow:auto;background:#fafbfe;">
+        <p>🟢 Прокрутите этот блок вниз, чтобы проверить появление кнопки.</p>
+        <p>Строка 2</p><p>Строка 3</p><p>Строка 4</p><p>Строка 5</p><p>Строка 6</p>
+        <p>Строка 7</p><p>Строка 8</p><p>Строка 9</p><p>Строка 10: Конец блока.</p>
+    </div>
+    <button class="success" id="scrollToBtn">📄 Прокрутить к записи «Строка 5»</button>
+    <div class="output" id="scrollOutput">Прокручено: 0px. Кнопка «Наверх» скрыта.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 3: Офлайн-режим</h2>
+    <p class="hint">Отключите интернет, чтобы увидеть индикатор потери соединения. Действия сохраняются и восстанавливаются при возврате сети.</p>
+    <div class="row">
+        <span class="badge" id="netBadge">Проверяем сеть...</span>
+    </div>
+    <div class="row" style="margin-top:8px;">
+        <button id="actionBtn">📝 Записать действие</button>
+        <button id="showActionsBtn" class="success">📋 Показать сохранённые</button>
+    </div>
+    <div class="output" id="netOutput">Нажмите записать действие.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 4: Отслеживание активности пользователя</h2>
+    <p class="hint">Если пользователь не двигает мышь 30 секунд — появится уведомление. Также ведётся счётчик кликов, движений и нажатий клавиш.</p>
+    <div class="stat-grid">
+        <div class="stat-item"><div class="num" id="clickStat">0</div>Кликов</div>
+        <div class="stat-item"><div class="num" id="moveStat">0</div>Движений</div>
+        <div class="stat-item"><div class="num" id="keyStat">0</div>Нажатий</div>
+    </div>
+    <p id="idleMsg" style="margin-top:12px;font-weight:bold;color:#667;">Пользователь активен...</p>
+    <div class="output" id="activityOutput">Понажимайте клавиши и пошевелите мышью.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 5: Хлебные крошки и история навигации</h2>
+    <p class="hint">Кнопки меняют хэш URL и добавляют записи в «хлебные крошки» через history API.</p>
+    <div id="breadcrumbs" style="margin-bottom:10px;"></div>
+    <button id="goHomeBtn">🏠 Главная</button>
+    <button id="goSectionBtn">📄 Раздел 1</button>
+    <button id="goOtherBtn">📄 Раздел 2</button>
+    <button id="backBtn" data-nav="-1">◀ Назад</button>
+    <button id="fwdBtn" data-nav="1">Вперёд ▶</button>
+    <div class="output" id="navOutput">История пуста. Переходите по разделам.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 6: Чат между вкладками (Storage)</h2>
+    <p class="hint">Откройте эту страницу в двух вкладках — сообщения синхронизируются между ними через событие storage.</p>
+    <div class="row">
+        <input type="text" id="chatInput" placeholder="Сообщение...">
+        <button class="success" id="chatSendBtn">📤 Отправить</button>
+    </div>
+    <div class="output" id="chatOutput">Вкладка готова к обмену сообщениями.</div>
+</section>
+
+<script>
+(function () {
+    /*** Задание 1: Адаптивный дизайн через resize ***/
+    const breakpointBadge = document.getElementById('breakpointBadge');
+    const widthDisplay = document.getElementById('widthDisplay');
+    const breakpointDemo = document.getElementById('breakpointDemo');
+    const resizeOutput = document.getElementById('resizeOutput');
+    let resizeCount = 0;
+
+    function updateBreakpoint() {
+        const w = window.innerWidth;
+        widthDisplay.textContent = w;
+        resizeCount++;
+        let scheme = { label: '', badge: '', bg: '#ffffff', color: '#1f2430' };
+        if (w < 600) {
+            scheme = { label: '📱 Мобильный', badge: 'mobile', bg: '#fdecea', color: '#7a1a1a' };
+        } else if (w < 900) {
+            scheme = { label: '📟 Планшет', badge: 'tablet', bg: '#fff8e1', color: '#7a5b00' };
+        } else {
+            scheme = { label: '🖥️ Десктоп', badge: 'desktop', bg: '#e8f5e9', color: '#1b5e20' };
+        }
+        breakpointBadge.textContent = scheme.label;
+        breakpointBadge.className = 'badge ' + scheme.badge;
+        breakpointDemo.style.background = scheme.bg;
+        breakpointDemo.style.color = scheme.color;
+        resizeOutput.textContent = 'Брейкпоинт: ' + scheme.label.replace(/[📱📟🖥️]/g, '').trim() + '. Обновлений с момента загрузки: ' + resizeCount;
+    }
+
+    let resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(updateBreakpoint, 150);
+    });
+    updateBreakpoint();
+
+    /*** Задание 2: Умный скролл ***/
+    const toTopBtn = document.getElementById('toTop');
+    const scrollTarget = document.getElementById('scrollTarget');
+    const scrollOutput = document.getElementById('scrollOutput');
+    const scrollToBtn = document.getElementById('scrollToBtn');
+
+    scrollTarget.addEventListener('scroll', function () {
+        const top = scrollTarget.scrollTop;
+        const maxScroll = this.scrollHeight - this.clientHeight;
+        if (top > 1) {
+            toTopBtn.style.display = 'block';
+            scrollOutput.textContent = 'Прокручено: ' + Math.round(top) + 'px из ' + maxScroll + 'px. Кнопка видна.';
+        } else {
+            toTopBtn.style.display = 'none';
+            scrollOutput.textContent = 'Прокручено: 0px. Кнопка скрыта.';
+        }
+    });
+
+    toTopBtn.addEventListener('click', function () {
+        scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollOutput.textContent = 'Возврат к началу...';
+    });
+
+    scrollToBtn.addEventListener('click', function () {
+        const paragraphs = scrollTarget.querySelectorAll('p');
+        const target = Array.from(paragraphs).find(function (p) {
+            return p.textContent.includes('Строка 5');
+        });
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    /*** Задание 3: Офлайн-режим ***/
+    const netBadge = document.getElementById('netBadge');
+    const actionBtn = document.getElementById('actionBtn');
+    const showActionsBtn = document.getElementById('showActionsBtn');
+    const netOutput = document.getElementById('netOutput');
+    const OFFLINE_KEY = 'pr11-info';
+    let offlineStore = [];
+
+    function loadStore() {
+        try {
+            offlineStore = JSON.parse(localStorage.getItem(OFFLINE_KEY) || '[]');
+        } catch (e) {
+            offlineStore = [];
+        }
+    }
+
+    function updateNetBadge() {
+        if (navigator.onLine) {
+            netBadge.textContent = '🟢 Онлайн';
+            netBadge.style.background = '#28a745';
+            netBadge.style.color = '#fff';
+            netBadge.style.borderColor = '#28a745';
+        } else {
+            netBadge.textContent = '🔴 Офлайн';
+            netBadge.style.background = '#dc3545';
+            netBadge.style.color = '#fff';
+            netBadge.style.borderColor = '#dc3545';
+        }
+    }
+
+    window.addEventListener('online', function () {
+        updateNetBadge();
+        if (offlineStore.length) {
+            netOutput.textContent = 'Связь восстановлена. Сохранённых действий: ' + offlineStore.length + '.';
+        } else {
+            netOutput.textContent = 'Связь восстановлена. Сохранённых действий нет.';
+        }
+    });
+
+    window.addEventListener('offline', function () {
+        updateNetBadge();
+        netOutput.textContent = 'Связь потеряна. Все действия будут сохранены локально.';
+    });
+
+    actionBtn.addEventListener('click', function () {
+        const entry = { time: new Date().toLocaleTimeString(), msg: 'Действие пользователя' };
+        if (navigator.onLine) {
+            netOutput.textContent = 'Записано онлайн: ' + entry.time + ' — ' + entry.msg;
+        } else {
+            offlineStore.push(entry);
+            localStorage.setItem(OFFLINE_KEY, JSON.stringify(offlineStore));
+            netOutput.textContent = 'Сохранено в офлайн: ' + entry.time + '. Всего: ' + offlineStore.length;
+        }
+    });
+
+    showActionsBtn.addEventListener('click', function () {
+        loadStore();
+        if (offlineStore.length === 0) {
+            netOutput.textContent = 'Сохранённых действий нет.';
+        } else {
+            netOutput.textContent = 'Сохранённые действия:\n' + offlineStore.map(function (e) { return e.time + ': ' + e.msg; }).join('\n');
+        }
+    });
+
+    updateNetBadge();
+    loadStore();
+
+    /*** Задание 4: Отслеживание активности ***/
+    const clickStat = document.getElementById('clickStat');
+    const moveStat = document.getElementById('moveStat');
+    const keyStat = document.getElementById('keyStat');
+    const idleMsg = document.getElementById('idleMsg');
+    const activityOutput = document.getElementById('activityOutput');
+    let clicks = 0, moves = 0, keys = 0;
+    let lastActivity = Date.now();
+    let idleNotified = false;
+
+    function notifyIdle() {
+        idleMsg.textContent = '⚠️ Пользователь неактивен более 30 секунд!';
+        idleMsg.style.color = '#dc3545';
+        activityOutput.textContent = 'Таймер неактивности сработал. Пользователь не активен 30+ секунд.';
+    }
+
+    setInterval(function () {
+        if (Date.now() - lastActivity > 30000 && !idleNotified) {
+            idleNotified = true;
+            notifyIdle();
+        }
+    }, 2000);
+
+    document.addEventListener('click', function () {
+        clicks++;
+        clickStat.textContent = clicks;
+        lastActivity = Date.now();
+        idleNotified = false;
+        idleMsg.style.color = '#667';
+        idleMsg.textContent = 'Пользователь активен...';
+    });
+
+    let moveCount = 0;
+    document.addEventListener('mousemove', function () {
+        moves++;
+        moveStat.textContent = moves;
+        if (moveCount % 20 === 0) {
+            lastActivity = Date.now();
+            idleNotified = false;
+            idleMsg.style.color = '#667';
+            idleMsg.textContent = 'Пользователь активен...';
+        }
+        moveCount++;
+    });
+
+    document.addEventListener('keydown', function () {
+        keys++;
+        keyStat.textContent = keys;
+        lastActivity = Date.now();
+        idleNotified = false;
+        idleMsg.style.color = '#667';
+        idleMsg.textContent = 'Пользователь активен...';
+        activityOutput.textContent = 'Действия пользователя за сессию: кликов — ' + clicks + ', движений — ' + moves + ', нажатий — ' + keys + '.';
+    });
+
+    /*** Задание 5: Хлебные крошки ***/
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    const navOutput = document.getElementById('navOutput');
+    const historySteps = [];
+    let currentStep = -1;
+
+    function renderNav() {
+        breadcrumbs.innerHTML = '';
+        historySteps.forEach(function (step, i) {
+            if (i > 0) {
+                const sep = document.createElement('span');
+                sep.className = 'crumb sep';
+                sep.textContent = '›';
+                breadcrumbs.appendChild(sep);
+            }
+            const crumb = document.createElement('span');
+            crumb.className = 'crumb';
+            if (i === currentStep) crumb.style.background = '#3b5bdb';
+            if (i === currentStep) crumb.style.color = '#fff';
+            crumb.textContent = step;
+            breadcrumbs.appendChild(crumb);
+        });
+        if (historySteps.length === 0) {
+            navOutput.textContent = 'История пуста. Переходите по разделам.';
+        } else {
+            navOutput.textContent = 'Текущая позиция: «' + historySteps[currentStep] + '» (шаг ' + (currentStep + 1) + ' из ' + historySteps.length + ')';
+        }
+    }
+
+    function pushStep(label) {
+        historySteps.length = currentStep + 1;
+        historySteps.push(label);
+        currentStep++;
+        renderNav();
+    }
+
+    document.getElementById('goHomeBtn').addEventListener('click', function () {
+        pushStep('🏠 Главная');
+        try { history.pushState({ crumb: 'Главная' }, '', '#home'); } catch (e) {}
+    });
+    document.getElementById('goSectionBtn').addEventListener('click', function () {
+        pushStep('📄 Раздел 1');
+        try { history.pushState({ crumb: 'Раздел 1' }, '', '#section1'); } catch (e) {}
+    });
+    document.getElementById('goOtherBtn').addEventListener('click', function () {
+        pushStep('📄 Раздел 2');
+        try { history.pushState({ crumb: 'Раздел 2' }, '', '#section2'); } catch (e) {}
+    });
+
+    document.querySelectorAll('[data-nav]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const delta = Number(this.dataset.nav);
+            const next = currentStep + delta;
+            if (next >= 0 && next < historySteps.length) {
+                currentStep = next;
+                renderNav();
+            }
+        });
+    });
+
+    /*** Задание 6: Чат между вкладками ***/
+    const CHAT_KEY = 'pr11-chat';
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const chatOutput = document.getElementById('chatOutput');
+
+    function getChat() {
+        try { return JSON.parse(localStorage.getItem(CHAT_KEY) || '[]'); } catch (e) { return []; }
+    }
+
+    function renderChat() {
+        const msgs = getChat();
+        chatOutput.textContent = 'Чат (' + msgs.length + ' сообщений):\n' + msgs.slice(-6).map(function (m) { return m.time + ': ' + m.text; }).join('\n');
+    }
+
+    chatSendBtn.addEventListener('click', function () {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        const msgs = getChat();
+        msgs.push({ time: new Date().toLocaleTimeString(), text: text });
+        localStorage.setItem(CHAT_KEY, JSON.stringify(msgs));
+        chatInput.value = '';
+        renderChat();
+    });
+    chatInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') chatSendBtn.click();
+    });
+
+    window.addEventListener('storage', function (e) {
+        if (e.key === CHAT_KEY) {
+            renderChat();
+        }
+    });
+
+    renderChat();
+})();
+</script>
+</body>
+</html>

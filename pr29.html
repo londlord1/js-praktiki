@@ -1,0 +1,252 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ПР29 — Асинхронные операции и внешние ресурсы React</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f0f2f5;color:#212529}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e0e0e0}
+  .topbar h1{margin:0;font-size:20px;color:#1c2333}
+  .topbar .back{color:#3b5bdb;text-decoration:none;font-size:14px;font-weight:600}
+  .wrap{max-width:860px;margin:24px auto;padding:0 16px}
+  .task{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:22px 24px;margin-bottom:22px}
+  .task h2{margin:0 0 14px;font-size:18px;color:#3b5bdb;border-bottom:2px solid #eef1f8;padding-bottom:10px}
+  .timerBox{display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .bigTime{font-size:56px;font-weight:700;text-align:center;background:#fff;border-radius:10px;box-shadow:inset 0 2px 5px rgba(0,0,0,.06);min-width:180px;padding:10px}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+  .quick button{padding:6px 14px;background:#eef1f8;color:#364fc7;border:none;border-radius:6px;cursor:pointer;font-size:14px}
+  .quick button:hover{background:#dbe4ff}
+  input{border:2px solid #dfe2ea;border-radius:8px;padding:10px 12px;font-size:15px;text-align:center;outline:none;width:70px}
+  input:focus{border-color:#3b5bdb}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+  button{padding:10px 18px;font-size:14px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb}
+  button:hover{filter:brightness(1.08)}
+  button:disabled{background:#c8ccd8;cursor:not-allowed}
+  .btn-green{background:#2f9e44}.btn-orange{background:#f08c00}.btn-red{background:#e03131}.btn-gray{background:#868e96}
+  .mmss{display:flex;align-items:center;gap:8px;justify-content:center}
+  .timerItem{background:#f8f9fc;border:1px solid #e6e9f2;border-radius:10px;padding:14px;margin-bottom:10px}
+  .timerItem .head{display:flex;justify-content:space-between;align-items:center}
+  .timerItem .head .lbl{font-weight:600;color:#495057}
+  .status{font-size:13px;color:#666}
+  .bar{height:10px;background:#edf0f5;border-radius:5px;overflow:hidden;margin-top:8px}
+  .bar>div{height:100%;transition:width .4s}
+</style></head><body>
+<div class="topbar"><h1>ПР29 — Асинхронные операции и внешние ресурсы React</h1><a class="back" href="index.html">← Все работы</a></div>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function formatTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(Math.floor(sec % 60)).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function useCountdown({ onFinish, onTick }) {
+  const [time, setTime] = useState(10);
+  const [isActive, setIsActive] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const ref = useRef(null);
+
+  const setInitial = (sec) => {
+    if (!isActive) { setTime(Math.max(0, sec)); setIsFinished(false); }
+  };
+
+  useEffect(() => {
+    if (isActive && time > 0) {
+      ref.current = setInterval(() => {
+        setTime(prev => {
+          if (prev <= 1) { setIsActive(false); setIsFinished(true); onFinish && onFinish(); return 0; }
+          onTick && onTick(prev - 1);
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => { if (ref.current) { clearInterval(ref.current); ref.current = null; } };
+  }, [isActive, time]);
+
+  const start = () => { if (time > 0) { setIsActive(true); setIsFinished(false); } };
+  const pause = () => setIsActive(false);
+  const reset = (sec) => { setIsActive(false); setIsFinished(false); setTime(sec); if (ref.current) { clearInterval(ref.current); ref.current = null; } };
+
+  return { time, isActive, isFinished, start, pause, reset: () => reset(10), setInitial, setTimeRaw: setTime };
+}
+
+function BasicTimer() {
+  const [initial, setInitial] = useState(10);
+  const t = useCountdown({});
+  const progress = initial > 0 ? ((initial - t.time) / initial) * 100 : 0;
+  const color = t.isFinished ? '#e03131' : t.time <= 3 ? '#f08c00' : '#2f9e44';
+
+  return (
+    <div>
+      <div className="timerBox">
+        <div>
+          <div className="bigTime" style={{ color }}>{formatTime(t.time)}</div>
+          <div className="bar"><div style={{ width: `${progress}%`, background: color }} /></div>
+        </div>
+        <div>
+          <p><b>Задание 2:</b> кнопки быстрой установки 5, 10, 30, 60 сек.</p>
+          <div className="quick">
+            {[5, 10, 30, 60].map(s => <button key={s} onClick={() => { t.setInitial(s); setInitial(s); }}>{s}с</button>)}
+          </div>
+          <div className="row">
+            {!t.isActive && !t.isFinished && t.time > 0 && <button className="btn-green" onClick={t.start}>▶ Старт</button>}
+            {t.isActive && <button className="btn-orange" onClick={t.pause}>⏸ Пауза</button>}
+            {t.isFinished && <button className="btn-red" disabled>⏰ Время вышло!</button>}
+            <button className="btn-gray" onClick={t.reset}>🔄 Сброс</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MmSsTimer() {
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(10);
+  const total = minutes * 60 + seconds;
+  const t = useCountdown({});
+
+  const apply = () => { t.setInitial(total); t.setTimeRaw(total); };
+
+  useEffect(() => { if (!t.isActive && !t.isFinished) { t.setTimeRaw(minutes * 60 + seconds); } }, [minutes, seconds]);
+
+  return (
+    <div>
+      <p style={{ color: '#495057' }}><b>Задание 3:</b> установка минут и секунд отдельно (МИН 0–99, СЕК 0–59).</p>
+      <div className="mmss">
+        <input type="number" min="0" max="99" value={minutes} onChange={e => setMinutes(Math.max(0, parseInt(e.target.value) || 0))} />
+        <span style={{ fontSize: 24, fontWeight: 700 }}>:</span>
+        <input type="number" min="0" max="59" value={seconds} onChange={e => setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))} />
+        <button onClick={apply}>Установить</button>
+      </div>
+      <div className="row">
+        <div className="bigTime" style={{ color: t.isFinished ? '#e03131' : '#2f9e44' }}>{formatTime(t.time)}</div>
+      </div>
+      <div className="row">
+        {!t.isActive && !t.isFinished && t.time > 0 && <button className="btn-green" onClick={t.start}>▶ Старт</button>}
+        {t.isActive && <button className="btn-orange" onClick={t.pause}>⏸ Пауза</button>}
+        {t.isFinished && <button className="btn-red" disabled>⏰ Время вышло!</button>}
+        <button className="btn-gray" onClick={() => t.reset()}>🔄 Сброс</button>
+      </div>
+    </div>
+  );
+}
+
+function RingTimer() {
+  const t = useCountdown({});
+  const [initial, setInitial] = useState(60);
+  const progress = initial > 0 ? ((initial - t.time) / initial) * 100 : 0;
+  const r = 90, c = 2 * Math.PI * r;
+  const offset = c * (1 - progress / 100);
+  const color = t.isFinished ? '#e03131' : t.time <= 3 ? '#f08c00' : '#2f9e44';
+
+  return (
+    <div>
+      <p style={{ color: '#495057' }}><b>Задание 4:</b> круговой SVG-индикатор. Цвет меняется в зависимости от оставшегося времени.</p>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <svg width="200" height="200">
+          <circle cx="100" cy="100" r={r} fill="none" stroke="#e0e0e0" strokeWidth="12" />
+          <circle cx="100" cy="100" r={r} fill="none" stroke={color} strokeWidth="12"
+            strokeDasharray={c} strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset .5s ease, stroke .3s', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+          <text x="100" y="112" textAnchor="middle" fontSize="34" fontWeight="700" fill={color}>{formatTime(t.time)}</text>
+        </svg>
+        <div>
+          <div className="row">
+            {[10, 30, 60].map(s => <button key={s} style={{ background: '#eef1f8', color: '#364fc7' }} onClick={() => { t.setInitial(s); setInitial(s); }}>{s}с</button>)}
+          </div>
+          <div className="row">
+            {!t.isActive && !t.isFinished && t.time > 0 && <button className="btn-green" onClick={t.start}>▶ Старт</button>}
+            {t.isActive && <button className="btn-orange" onClick={t.pause}>⏸ Пауза</button>}
+            {t.isFinished && <button className="btn-red" disabled>⏰ Время вышло!</button>}
+            <button className="btn-gray" onClick={t.reset}>🔄 Сброс</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MultiTimer() {
+  const [timers, setTimers] = useState([{ id: 1, time: 10, initial: 10 }]);
+  const active = useRef({});
+  const finished = useRef({});
+
+  const addTimer = () => setTimers(prev => [...prev, { id: prev.length > 0 ? Math.max(...prev.map(x => x.id)) + 1 : 1, time: 10, initial: 10 }]);
+
+  const removeTimer = (id) => setTimers(prev => prev.filter(x => x.id !== id));
+
+  const update = (id, patch) => setTimers(prev => prev.map(x => x.id === id ? { ...x, ...patch } : x));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimers(prev => prev.map(t => {
+        if (active.current[t.id] && t.time > 0) {
+          if (t.time <= 1) { active.current[t.id] = false; finished.current[t.id] = true; return { ...t, time: 0 }; }
+          return { ...t, time: t.time - 1 };
+        }
+        return t;
+      }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div>
+      <p style={{ color: '#495057' }}><b>Задание 5:</b> несколько независимых таймеров, каждый работает по отдельности.</p>
+      <div className="row">
+        <button style={{ background: '#0c8599' }} onClick={addTimer}>＋ Добавить таймер</button>
+      </div>
+      {timers.map((t, i) => {
+        const color = finished.current[t.id] ? '#e03131' : (active.current[t.id] && t.time <= 3) ? '#f08c00' : '#2f9e44';
+        const progress = t.initial > 0 ? ((t.initial - t.time) / t.initial) * 100 : 0;
+        const idx = 'т' + (i + 1);
+        return (
+          <div className="timerItem" key={t.id}>
+            <div className="head">
+              <span className="lbl">Таймер {idx}</span>
+              <span className="status">{active.current[t.id] ? '⏳ работает' : finished.current[t.id] ? '⏰ завершён' : '⏸ пауза'}</span>
+              <button className="btn-red" onClick={() => removeTimer(t.id)} style={{ fontSize: 12, padding: '4px 10px' }}>Удалить</button>
+            </div>
+            <div style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, color, padding: 8 }}>{formatTime(t.time)}</div>
+            <div className="bar"><div style={{ width: `${progress}%`, background: color }} /></div>
+            <div className="row">
+              {!active.current[t.id] && !finished.current[t.id] && t.time > 0 && <button className="btn-green" onClick={() => { active.current[t.id] = true; finished.current[t.id] = false; }}>▶</button>}
+              {active.current[t.id] && <button className="btn-orange" onClick={() => active.current[t.id] = false}>⏸</button>}
+              <button className="btn-gray" onClick={() => { active.current[t.id] = false; finished.current[t.id] = false; update(t.id, { time: 10, initial: 10 }); }}>🔄</button>
+              <input type="number" min="1" max="60" value={t.initial} onChange={e => { const v = Math.max(1, parseInt(e.target.value) || 1); update(t.id, { initial: v, time: v }); finished.current[t.id] = false; active.current[t.id] = false; }} style={{ width: 60 }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="wrap">
+      <div className="task">
+        <h2>Задание 1: Основной таймер + быстрые кнопки (5/10/30/60)</h2>
+        <BasicTimer />
+      </div>
+      <div className="task">
+        <h2>Задание 3: Установка минут и секунд отдельно</h2>
+        <MmSsTimer />
+      </div>
+      <div className="task">
+        <h2>Задание 4: Круговой прогресс (SVG)</h2>
+        <RingTimer />
+      </div>
+      <div className="task">
+        <h2>Задание 5: Несколько таймеров одновременно</h2>
+        <MultiTimer />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

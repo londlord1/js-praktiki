@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР13 — Методы перебора массивов</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.ok{color:#28a745}
+.no{color:#dc3545}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР13 — Методы перебора массивов</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. forEach, map, filter, reduce, find, some, every, findIndex.</div>
+
+<section class="card">
+    <h2>Задание 1: Комбинирование методов (цепочки)</h2>
+    <p class="hint">Функция getExpensiveTechNames() одной цепочкой методов: фильтрует категорию "tech", отбирает дороже 500, возвращает массив названий.</p>
+    <button id="techBtn">🔧 Показать дорогие техтовары</button>
+    <div class="output" id="techOutput">Нажмите кнопку.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 2: Подсчёт товаров по категориям</h2>
+    <p class="hint">reduce собирает объект, где ключ — категория, значение — количество товаров в ней.</p>
+    <button id="catBtn">📊 Подсчитать по категориям</button>
+    <div class="output" id="catOutput">Нажмите кнопку.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 3: findIndex и some/every</h2>
+    <p class="hint">Проверки наличия товаров дороже 2000 (some), дешевле 2000 (every) и поиск индекса товара «Стул».</p>
+    <button id="checkBtn">🔍 Выполнить проверки</button>
+    <div class="output" id="checkOutput">Нажмите кнопку.</div>
+</section>
+
+<script>
+(function () {
+    const warehouse = [
+        { id: 1, name: "Ноутбук", price: 1000, quantity: 4, category: "tech" },
+        { id: 2, name: "Мышь", price: 50, quantity: 15, category: "tech" },
+        { id: 3, name: "Клавиатура", price: 80, quantity: 10, category: "tech" },
+        { id: 4, name: "Стол", price: 300, quantity: 2, category: "furniture" },
+        { id: 5, name: "Стул", price: 150, quantity: 8, category: "furniture" },
+        { id: 6, name: "Лампа", price: 40, quantity: 20, category: "lighting" },
+        { id: 7, name: "Монитор", price: 700, quantity: 5, category: "tech" }
+    ];
+
+    /*** Задание 1: getExpensiveTechNames() ***/
+    function getExpensiveTechNames() {
+        return warehouse
+            .filter(item => item.category === 'tech')
+            .filter(item => item.price > 500)
+            .map(item => item.name);
+    }
+
+    document.getElementById('techBtn').addEventListener('click', function () {
+        const names = getExpensiveTechNames();
+        const out = document.getElementById('techOutput');
+        out.innerHTML =
+            'Цепочка: filter(tech) → filter(price>500) → map(name)\n' +
+            'Результат: <span class="ok">["' + names.join('", "') + '"]</span>';
+    });
+
+    /*** Задание 2: countByCategory() ***/
+    function countByCategory() {
+        return warehouse.reduce((acc, item) => {
+            acc[item.category] = (acc[item.category] || 0) + 1;
+            return acc;
+        }, {});
+    }
+
+    document.getElementById('catBtn').addEventListener('click', function () {
+        const counts = countByCategory();
+        const out = document.getElementById('catOutput');
+        let html = 'Результат reduce:\n';
+        Object.keys(counts).forEach(function (key) {
+            html += '  ' + key + ': <span class="ok">' + counts[key] + '</span>\n';
+        });
+        out.innerHTML = html;
+    });
+
+    /*** Задание 3: some/every/findIndex ***/
+    document.getElementById('checkBtn').addEventListener('click', function () {
+        const someExpensive = warehouse.some(item => item.price > 2000);
+        const allCheap = warehouse.every(item => item.price < 2000);
+        const stoolIndex = warehouse.findIndex(item => item.name === 'Стул');
+
+        const out = document.getElementById('checkOutput');
+        out.innerHTML =
+            'some: есть ли товары дороже 2000 → <span class="' + (someExpensive ? 'no' : 'ok') + '">' + someExpensive + '</span>\n' +
+            'every: все ли дешевле 2000 → <span class="' + (allCheap ? 'ok' : 'no') + '">' + allCheap + '</span>\n' +
+            'findIndex("Стул") → <span class="ok">' + stoolIndex + '</span>\n' +
+            'Товар по индексу: ' + (stoolIndex >= 0 ? warehouse[stoolIndex].name + ' (цена ' + warehouse[stoolIndex].price + ' ₽)' : 'не найден');
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ПР27 — Списки и ключи React</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f0f2f5;color:#212529}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e0e0e0}
+  .topbar h1{margin:0;font-size:20px;color:#1c2333}
+  .topbar .back{color:#3b5bdb;text-decoration:none;font-size:14px;font-weight:600}
+  .wrap{max-width:760px;margin:24px auto;padding:0 16px}
+  .task{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:22px 24px;margin-bottom:22px}
+  .task h2{margin:0 0 14px;font-size:18px;color:#3b5bdb;border-bottom:2px solid #eef1f8;padding-bottom:10px}
+  .form{display:flex;gap:10px;flex-wrap:wrap}
+  input,select{padding:10px 12px;font-size:15px;border:2px solid #dfe2ea;border-radius:8px;outline:none}
+  input:focus,select:focus{border-color:#3b5bdb}
+  input.small{width:90px}
+  select{background:#fff;cursor:pointer}
+  button{padding:10px 16px;font-size:14px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb;transition:background .2s}
+  button:hover{filter:brightness(1.08)}
+  .btn-green{background:#2f9e44}.btn-red{background:#e03131}.btn-gray{background:#868e96}.btn-orange{background:#f08c00}
+  .list{list-style:none;padding:0;margin:12px 0}
+  .list li{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f8f9fc;border:1px solid #e6e9f2;border-radius:8px;margin-bottom:8px}
+  .list .name{flex:1;font-size:15px}
+  .list .done{text-decoration:line-through;color:#999}
+  .stats{display:flex;gap:16px;flex-wrap:wrap;padding:12px;background:#eef1f8;border-radius:8px;margin:12px 0;font-size:14px}
+  .stats b.g{color:#2f9e44}.stats b.o{color:#f08c00}
+  .empty{text-align:center;color:#adb5bd;padding:22px;background:#f8f9fc;border-radius:8px}
+  .cat{background:#eef1f8;color:#364fc7;font-size:13px;font-weight:600;padding:3px 10px;border-radius:12px}
+  .catTitle{font-size:15px;font-weight:700;color:#3b5bdb;margin:16px 0 6px;text-transform:capitalize}
+  .iconBtn{padding:6px 10px;font-size:13px}
+  .saveHint{color:#2f9e44;font-size:13px;margin-top:8px}
+  .editInput{padding:8px 10px;font-size:14px;border:2px solid #3b5bdb;border-radius:6px}
+</style></head><body>
+<div class="topbar"><h1>ПР27 — Списки и ключи React</h1><a class="back" href="index.html">← Все работы</a></div>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+function ShoppingList({ storageKey, withCategory, withSearch }) {
+  const [input, setInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('Продукты');
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch (err) { return []; }
+  });
+
+  useEffect(() => { localStorage.setItem(storageKey, JSON.stringify(items)); }, [items, storageKey]);
+
+  const addItem = (e) => {
+    e.preventDefault();
+    const name = input.trim();
+    if (!name) return;
+    setItems(prev => [...prev, { id: Date.now() + Math.random(), name, purchased: false, category: withCategory ? category : undefined }]);
+    setInput('');
+  };
+
+  const toggle = (id) => setItems(prev => prev.map(i => i.id === id ? { ...i, purchased: !i.purchased } : i));
+  const remove = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  const clearAll = () => setItems([]);
+
+  const startEdit = (id, name) => { setEditingId(id); setEditValue(name); };
+  const saveEdit = (id) => {
+    const name = editValue.trim();
+    if (!name) return;
+    setItems(prev => prev.map(i => i.id === id ? { ...i, name } : i));
+    setEditingId(null);
+  };
+
+  const baseList = withSearch ? items.filter(i => i.name.toLowerCase().includes(search.trim().toLowerCase())) : items;
+
+  const total = items.length;
+  const purchased = items.filter(i => i.purchased).length;
+  const remaining = total - purchased;
+
+  const grouped = useMemo(() => {
+    if (!withCategory) return null;
+    const map = {};
+    items.forEach(i => { const c = i.category || 'Другое'; (map[c] = map[c] || []).push(i); });
+    return map;
+  }, [items, withCategory]);
+
+  const renderRow = (item) => (
+    <li key={item.id}>
+      <button className={item.purchased ? 'btn-green' : 'btn-gray'} onClick={() => toggle(item.id)} style={{ fontSize: 14, padding: '4px 9px' }}>{item.purchased ? '✓' : '○'}</button>
+      {editingId === item.id ? (
+        <>
+          <input className="editInput" autoFocus value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEdit(item.id); if (e.key === 'Escape') setEditingId(null); }} />
+          <button className="btn-green iconBtn" onClick={() => saveEdit(item.id)}>Сохранить</button>
+          <button className="btn-gray iconBtn" onClick={() => setEditingId(null)}>Отмена</button>
+        </>
+      ) : (
+        <>
+          <span className={'name' + (item.purchased ? ' done' : '')}>{item.name}</span>
+          {withCategory && <span className="cat">{item.category}</span>}
+          <button className="btn-orange iconBtn" onClick={() => startEdit(item.id, item.name)}>✎</button>
+          <button className="btn-red iconBtn" onClick={() => remove(item.id)}>✕</button>
+        </>
+      )}
+    </li>
+  );
+
+  const statsBar = (
+    <div className="stats">
+      <span>Всего: <b>{total}</b></span>
+      <span>✓ Куплено: <b className="g">{purchased}</b></span>
+      <span>○ Осталось: <b className="o">{remaining}</b></span>
+      <span style={{ marginLeft: 'auto' }}>
+        {items.length > 0 && <button className="btn-red" onClick={clearAll} style={{ fontSize: 13, padding: '5px 12px' }}>Очистить всё</button>}
+      </span>
+    </div>
+  );
+
+  return (
+    <div>
+      <form className="form" onSubmit={addItem}>
+        <input style={{ flex: 1, minWidth: 180 }} placeholder="Название товара..." value={input} onChange={e => setInput(e.target.value)} />
+        {withCategory && (
+          <select value={category} onChange={e => setCategory(e.target.value)}>
+            <option>Продукты</option><option>Бытовая химия</option><option>Электроника</option><option>Другое</option>
+          </select>
+        )}
+        <button type="submit">Добавить</button>
+      </form>
+
+      {withSearch && (
+        <div style={{ marginTop: 10 }}>
+          <input style={{ width: '100%', boxSizing: 'border-box' }} placeholder="🔍 Поиск по названию..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+      )}
+
+      {statsBar}
+
+      {grouped ? (
+        Object.entries(grouped).map(([cat, list]) => (
+          <div key={cat}>
+            <div className="catTitle">{cat} — {list.length}</div>
+            <ul className="list">{list.map(renderRow)}</ul>
+            {list.length === 0 && <div className="empty">В этой категории пусто</div>}
+          </div>
+        ))
+      ) : baseList.length === 0 ? (
+        <div className="empty">Список пуст. Добавьте первый товар.</div>
+      ) : (
+        <ul className="list">{baseList.map(renderRow)}</ul>
+      )}
+
+      {items.length > 0 && <div className="saveHint">💾 Данные автоматически сохраняются в браузере (LocalStorage).</div>}
+    </div>
+  );
+}
+
+function Task1() {
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Добавление по Enter работает через <b>&lt;form onSubmit&gt;</b>. Отметка покупки — кнопка ✓/○ зачёркивает товар.</p>
+      <ShoppingList storageKey="pr27-basic" withCategory={false} withSearch={false} />
+    </div>
+  );
+}
+
+function Task2And3() {
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Товар отмечается как купленный, остаётся в списке. Счётчик показывает «Всего / Куплено / Осталось».</p>
+      <ShoppingList storageKey="pr27-count" withCategory={false} withSearch={false} />
+    </div>
+  );
+}
+
+function Task4() {
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Список автоматически фильтруется по мере ввода запроса (регистр не важен).</p>
+      <ShoppingList storageKey="pr27-search" withCategory={false} withSearch={true} />
+    </div>
+  );
+}
+
+function Task5() {
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Кнопка ✎ переводит товар в режим редактирования с кнопками «Сохранить» и «Отмена».</p>
+      <ShoppingList storageKey="pr27-edit" withCategory={false} withSearch={false} />
+    </div>
+  );
+}
+
+function Task6() {
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Все изменения (добавление, удаление, отметка, редактирование) сохраняются в LocalStorage и восстанавливаются после перезагрузки.</p>
+      <ShoppingList storageKey="pr27-persist" withCategory={false} withSearch={false} />
+    </div>
+  );
+}
+
+function Task7() {
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Товары можно добавлять с категорией; список группируется по категориям с заголовками.</p>
+      <ShoppingList storageKey="pr27-cat" withCategory={true} withSearch={false} />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="wrap">
+      <div className="task">
+        <h2>Задание 1: Добавление по Enter и отметка «куплено»</h2>
+        <Task1 />
+      </div>
+      <div className="task">
+        <h2>Задание 2–3: Куплено/осталось + группировка счётчика</h2>
+        <Task2And3 />
+      </div>
+      <div className="task">
+        <h2>Задание 4: Поиск/фильтрация товаров</h2>
+        <Task4 />
+      </div>
+      <div className="task">
+        <h2>Задание 5: Редактирование товара</h2>
+        <Task5 />
+      </div>
+      <div className="task">
+        <h2>Задание 6: Сохранение в LocalStorage</h2>
+        <Task6 />
+      </div>
+      <div className="task">
+        <h2>Задание 7: Категории товаров</h2>
+        <Task7 />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

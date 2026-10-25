@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР16 — Комплексная работа с JSON</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.post{background:#f0f3fa;border-left:3px solid #3b5bdb;padding:10px 14px;border-radius:8px;margin-bottom:10px}
+.post h4{margin:0 0 4px}
+.post .meta{color:#667;font-size:13px}
+.post .tags span{display:inline-block;background:#e6e9f5;border-radius:12px;padding:2px 8px;font-size:12px;margin:2px}
+.star{cursor:pointer;color:#f9a825;font-size:18px;background:none;border:none;padding:0}
+.star.off{color:#c9d1e0}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР16 — Комплексная работа с JSON</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. JSON.parse/stringify, Map, Set, фильтрация, сортировка, экспорт.</div>
+
+<section class="card">
+    <h2>Загрузка постов из JSON</h2>
+    <div class="row">
+        <button class="success" id="loadBtn">📥 Загрузить посты</button>
+        <button class="success" id="favBtn">⭐ Показать избранное (<span id="favCount">0</span>)</button>
+        <button class="danger" id="resetBtn">🗑️ Сбросить всё</button>
+    </div>
+    <div class="row">
+        <select id="authorFilter"><option value="">Все авторы</option></select>
+        <select id="categoryFilter"><option value="">Все категории</option></select>
+        <select id="sortOrder">
+            <option value="date-desc">По дате (новые)</option>
+            <option value="date-asc">По дате (старые)</option>
+            <option value="likes-desc">По лайкам</option>
+        </select>
+        <button id="applyFiltersBtn">🔍 Применить</button>
+    </div>
+    <div class="row">
+        <input type="text" id="searchInput" placeholder="Поиск по заголовку и превью..." style="flex:1;">
+    </div>
+    <div id="postsContainer"></div>
+    <div class="output" id="logContainer">Лог действий:</div>
+</section>
+
+<section class="card">
+    <h2>Задание 1: Статистика по тегам (Map)</h2>
+    <p class="hint">Подсчитывает, сколько раз каждый тег встречается во всех постах, и показывает топ-5 тегов через Map.</p>
+    <button id="tagStatsBtn">🏷️ Показать топ-5 тегов</button>
+    <div class="output" id="tagStatsOutput">Нажмите кнопку.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 3: Рекомендации на основе избранного</h2>
+    <p class="hint">Находит теги избранных постов и предлагает похожие посты, исключая уже избранные.</p>
+    <button id="recommendBtn">💡 Показать рекомендации</button>
+    <div class="output" id="recommendOutput">Добавьте посты в избранное и нажмите кнопку.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 4: Экспорт данных в JSON</h2>
+    <p class="hint">Собирает текущее состояние (избранное, счётчики, дата) в JSON-строку и выводит её / скачивает файлом.</p>
+    <button id="exportBtn">📤 Экспорт в JSON</button>
+    <button id="copyBtn">📋 Скопировать JSON</button>
+    <div class="output" id="exportOutput">Экспортированное состояние появится здесь.</div>
+</section>
+
+<script>
+(function () {
+    const API_RESPONSE = `[
+        { "id": 1, "title": "JavaScript: новые возможности ES2025", "author": "Анна Петрова", "date": "2025-06-20", "category": "Технологии", "tags": ["javascript", "es2025", "web"], "likes": 42, "preview": "Обзор новых фич JavaScript, включая Records и Tuples." },
+        { "id": 2, "title": "React 20: что изменилось", "author": "Иван Сидоров", "date": "2025-06-18", "category": "Технологии", "tags": ["react", "frontend", "web"], "likes": 38, "preview": "Крупное обновление React: серверные компоненты становятся стандартом." },
+        { "id": 3, "title": "Как я перешёл на TypeScript", "author": "Анна Петрова", "date": "2025-06-15", "category": "Разработка", "tags": ["typescript", "javascript", "опыт"], "likes": 27, "preview": "Личный опыт миграции проекта с JavaScript на TypeScript." },
+        { "id": 4, "title": "Дизайн-системы: с чего начать", "author": "Мария Козлова", "date": "2025-06-22", "category": "Дизайн", "tags": ["design", "ui", "components"], "likes": 15, "preview": "Пошаговое руководство по созданию дизайн-системы." },
+        { "id": 5, "title": "Node.js: оптимизация производительности", "author": "Иван Сидоров", "date": "2025-06-10", "category": "Разработка", "tags": ["nodejs", "performance", "backend"], "likes": 53, "preview": "Пять способов ускорить Node.js приложение." },
+        { "id": 6, "title": "CSS Container Queries на практике", "author": "Мария Козлова", "date": "2025-06-21", "category": "Дизайн", "tags": ["css", "responsive", "web"], "likes": 31, "preview": "Как использовать Container Queries для адаптивных компонентов." },
+        { "id": 7, "title": "Безопасность веб-приложений в 2025", "author": "Пётр Волков", "date": "2025-06-19", "category": "Безопасность", "tags": ["security", "web", "best-practices"], "likes": 61, "preview": "Актуальные угрозы и методы защиты." }
+    ]`;
+
+    let posts = [];
+    const postsMap = new Map();
+    const favorites = new Set();
+    const actionLog = [];
+    let currentDisplayPosts = [];
+
+    const postsContainer = document.getElementById('postsContainer');
+    const logContainer = document.getElementById('logContainer');
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function addLog(action, details) {
+        actionLog.unshift({ action: action, details: details || '', timestamp: new Date().toLocaleTimeString('ru-RU') });
+        if (actionLog.length > 5) actionLog.pop();
+        renderLog();
+    }
+
+    function renderLog() {
+        logContainer.textContent = 'Лог действий:\n' + actionLog.map(function (e) {
+            return '[' + e.timestamp + '] ' + e.action + (e.details ? ': ' + e.details : '');
+        }).join('\n');
+    }
+
+    function renderPosts(list) {
+        if (!list.length) {
+            postsContainer.innerHTML = '<p style="color:#788;">Нет постов для отображения</p>';
+        } else {
+            postsContainer.innerHTML = list.map(function (post) {
+                const isFav = favorites.has(post.id);
+                const star = isFav ? '★' : '☆';
+                const dotClass = isFav ? '' : ' off';
+                return '<div class="post">' +
+                    '<h4>' + escapeHtml(post.title) +
+                    ' <button class="star' + dotClass + '" data-fav="' + post.id + '">' + star + '</button></h4>' +
+                    '<div class="meta"><strong>' + escapeHtml(post.author) + '</strong> | ' + post.date + ' | ' + escapeHtml(post.category) + '</div>' +
+                    '<div class="tags">' + post.tags.map(function (t) { return '<span>#' + escapeHtml(t) + '</span>'; }).join('') + '</div>' +
+                    '<p>' + escapeHtml(post.preview) + '</p>' +
+                    '<div class="meta">❤️ ' + post.likes + '</div></div>';
+            }).join('');
+            document.querySelectorAll('[data-fav]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    toggleFavorite(Number(btn.dataset.fav));
+                });
+            });
+        }
+        document.getElementById('favCount').textContent = favorites.size;
+    }
+
+    function populateSelect(selectId, itemsSet, defaultLabel) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">' + defaultLabel + '</option>';
+        [...itemsSet].sort().forEach(function (item) {
+            const opt = document.createElement('option');
+            opt.value = item;
+            opt.textContent = item;
+            select.appendChild(opt);
+        });
+    }
+
+    function loadPosts() {
+        try {
+            posts = JSON.parse(API_RESPONSE);
+        } catch (e) {
+            postsContainer.innerHTML = '<p style="color:#dc3545;">Ошибка загрузки данных!</p>';
+            return;
+        }
+        postsMap.clear();
+        posts.forEach(function (p) { postsMap.set(p.id, p); });
+
+        populateSelect('authorFilter', new Set(posts.map(function (p) { return p.author; })), 'Все авторы');
+        populateSelect('categoryFilter', new Set(posts.map(function (p) { return p.category; })), 'Все категории');
+
+        currentDisplayPosts = [...posts];
+        renderPosts(currentDisplayPosts);
+        addLog('Данные загружены', 'Загружено ' + posts.length + ' постов');
+    }
+
+    function toggleFavorite(postId) {
+        if (!postsMap.has(postId)) return;
+        const post = postsMap.get(postId);
+        if (favorites.has(postId)) {
+            favorites.delete(postId);
+            addLog('Удалено из избранного', 'Пост: "' + post.title + '"');
+        } else {
+            favorites.add(postId);
+            addLog('Добавлено в избранное', 'Пост: "' + post.title + '"');
+        }
+        renderPosts(currentDisplayPosts);
+    }
+
+    function applyFilters() {
+        if (!posts.length) return;
+        const authorFilter = document.getElementById('authorFilter').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const sortOrder = document.getElementById('sortOrder').value;
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+        let filtered = [...posts];
+        if (authorFilter) filtered = filtered.filter(function (p) { return p.author === authorFilter; });
+        if (categoryFilter) filtered = filtered.filter(function (p) { return p.category === categoryFilter; });
+        if (query) {
+            filtered = filtered.filter(function (p) {
+                return p.title.toLowerCase().includes(query) || p.preview.toLowerCase().includes(query);
+            });
+        }
+
+        if (sortOrder === 'date-asc') filtered.sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+        else if (sortOrder === 'likes-desc') filtered.sort(function (a, b) { return b.likes - a.likes; });
+        else filtered.sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
+
+        currentDisplayPosts = filtered;
+        renderPosts(currentDisplayPosts);
+        addLog('Фильтрация', 'Найдено: ' + filtered.length);
+    }
+
+    function resetAll() {
+        posts = [];
+        postsMap.clear();
+        favorites.clear();
+        actionLog.length = 0;
+        currentDisplayPosts = [];
+        postsContainer.innerHTML = '<p style="color:#788;">Данные не загружены.</p>';
+        document.getElementById('authorFilter').innerHTML = '<option value="">Все авторы</option>';
+        document.getElementById('categoryFilter').innerHTML = '<option value="">Все категории</option>';
+        document.getElementById('searchInput').value = '';
+        document.getElementById('favCount').textContent = '0';
+        renderLog();
+        renderPosts([]);
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadPosts);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+    document.getElementById('favBtn').addEventListener('click', function () {
+        if (!posts.length) return;
+        const favPosts = posts.filter(function (p) { return favorites.has(p.id); });
+        currentDisplayPosts = favPosts;
+        renderPosts(favPosts);
+        addLog('Показано избранное', 'Найдено ' + favPosts.length + ' постов');
+    });
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    /*** Задание 2: Полнотекстовый поиск (через input выше) ***/
+    // Реализован через событие input в поле #searchInput → applyFilters()
+
+    /*** Задание 1: Статистика по тегам (Map) ***/
+    document.getElementById('tagStatsBtn').addEventListener('click', function () {
+        if (!posts.length) {
+            document.getElementById('tagStatsOutput').textContent = 'Сначала загрузите посты.';
+            return;
+        }
+        const tagCounts = new Map();
+        posts.forEach(function (post) {
+            post.tags.forEach(function (tag) {
+                tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+            });
+        });
+        const topTags = [...tagCounts.entries()]
+            .sort(function (a, b) { return b[1] - a[1]; })
+            .slice(0, 5);
+
+        let out = 'Топ-5 тегов (Map):\n';
+        topTags.forEach(function (pair, i) {
+            out += '  ' + (i + 1) + '. #' + pair[0] + ' — ' + pair[1] + ' раз\n';
+        });
+        out += '\nВсего уникальных тегов: ' + tagCounts.size;
+        document.getElementById('tagStatsOutput').textContent = out;
+    });
+
+    /*** Задание 3: Рекомендации на основе избранного ***/
+    document.getElementById('recommendBtn').addEventListener('click', function () {
+        const out = document.getElementById('recommendOutput');
+        if (!posts.length) {
+            out.textContent = 'Сначала загрузите посты.';
+            return;
+        }
+        if (favorites.size === 0) {
+            out.textContent = 'В избранном нет постов. Добавьте ★, чтобы получить рекомендации.';
+            return;
+        }
+        const favTags = new Set();
+        favorites.forEach(function (id) {
+            const post = postsMap.get(id);
+            if (post) post.tags.forEach(function (t) { favTags.add(t); });
+        });
+
+        const recommendations = posts.filter(function (post) {
+            return !favorites.has(post.id) &&
+                post.tags.some(function (tag) { return favTags.has(tag); });
+        });
+
+        if (!recommendations.length) {
+            out.textContent = 'Похожих постов не найдено.';
+            return;
+        }
+        let text = 'Рекомендации на основе избранного (' + recommendations.length + '):\n';
+        recommendations.forEach(function (p) {
+            text += '  • "' + p.title + '" (Автор: ' + p.author + ')\n';
+        });
+        out.textContent = text;
+    });
+
+    /*** Задание 4: Экспорт в JSON ***/
+    let lastExport = '';
+    document.getElementById('exportBtn').addEventListener('click', function () {
+        const state = {
+            favorites: [...favorites],
+            totalPosts: posts.length,
+            exportDate: new Date().toISOString()
+        };
+        lastExport = JSON.stringify(state, null, 2);
+        document.getElementById('exportOutput').textContent = lastExport;
+
+        const blob = new Blob([lastExport], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'blog-state.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        addLog('Экспорт', 'Состояние выгружено в blog-state.json');
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', function () {
+        if (!lastExport) {
+            document.getElementById('exportOutput').textContent = 'Сначала выполните экспорт (кнопка «Экспорт в JSON»).';
+            return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(lastExport).then(function () {
+                document.getElementById('exportOutput').textContent = '✅ JSON скопирован в буфер обмена.';
+            });
+        } else {
+            document.getElementById('exportOutput').textContent = lastExport;
+        }
+    });
+
+    renderLog();
+    renderPosts([]);
+})();
+</script>
+</body>
+</html>

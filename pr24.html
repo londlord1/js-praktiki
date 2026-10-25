@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР24 — Взаимодействие с DOM. Рендеринг и события</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.book-row{display:flex;justify-content:space-between;align-items:center;background:#f8f9fc;border:1px solid #e3e7f0;border-radius:8px;padding:8px 12px;margin-bottom:6px}
+.book-row strong{color:#1f2430}
+.book-meta{font-size:13px;color:#667}
+.book-actions{display:flex;gap:6px;flex-wrap:wrap}
+.book-actions button{padding:4px 10px;font-size:12px}
+.old-tag{background:#ffe9c7;color:#b26a00;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:6px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР24 — Взаимодействие с DOM. Рендеринг и события</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: редактирование книги, живой поиск, сортировка.</div>
+
+<section class="card">
+  <h2>Библиотека книг (DOM-рендеринг) + доработки зад. 1–3</h2>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:250px">
+      <h3>➕ Добавить книгу</h3>
+      <input type="text" id="title" placeholder="Название">
+      <input type="text" id="author" placeholder="Автор">
+      <input type="number" id="year" placeholder="Год" value="2020">
+      <button class="success" id="addBtn">Добавить</button>
+    </div>
+    <div style="flex:2;min-width:320px">
+      <h3>🔍 Поиск (зад. 2 — живой поиск) и сортировка (зад. 3)</h3>
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Поиск по названию или автору..." style="flex:1;min-width:160px">
+        <select id="sortSelect">
+          <option value="none">Сортировать →</option>
+          <option value="yearAsc">Год ↑ (по возрастанию)</option>
+          <option value="yearDesc">Год ↓ (по убыванию)</option>
+          <option value="title">Название (А-Я)</option>
+          <option value="titleDesc">Название (Я-А)</option>
+          <option value="rating">Рейтинг (высокий → низкий)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="resetBtn">Сбросить к стартовым книгам</button>
+  </div>
+
+  <div id="cards"></div>
+  <div class="output" id="log">Список книг. Добавьте книгу, найдите и отсортируйте её.</div>
+</section>
+
+<script>
+// ===== модель =====
+let books = [];
+function seed() {
+  books = [
+    { id: 1, title: 'Война и мир', author: 'Лев Толстой', year: 1869, rating: 4.8, available: true },
+    { id: 2, title: '1984', author: 'Джордж Оруэлл', year: 1949, rating: 4.6, available: false },
+    { id: 3, title: 'Мастер и Маргарита', author: 'М. Булгаков', year: 1967, rating: 5, available: true },
+    { id: 4, title: 'Преступление и наказание', author: 'Фёдор Достоевский', year: 1866, rating: 4.9, available: true },
+    { id: 5, title: 'Дюна', author: 'Фрэнк Герберт', year: 1965, rating: 4.2, available: true }
+  ];
+  let n = 5;
+  books.forEach(b => { if (!b.id) b.id = ++n; });
+}
+seed();
+let nextId = 100;
+
+const cardsEl = document.getElementById('cards');
+const logEl = document.getElementById('log');
+function log(msg) { logEl.textContent += (logEl.textContent ? '\n' : '') + msg; }
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let result = books.filter(b =>
+    !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
+  );
+  const sort = document.getElementById('sortSelect').value;
+  if (sort === 'yearAsc') result = [...result].sort((a, b) => a.year - b.year);
+  else if (sort === 'yearDesc') result = [...result].sort((a, b) => b.year - a.year);
+  else if (sort === 'title') result = [...result].sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+  else if (sort === 'titleDesc') result = [...result].sort((a, b) => b.title.localeCompare(a.title, 'ru'));
+  else if (sort === 'rating') result = [...result].sort((a, b) => b.rating - a.rating);
+  return result;
+}
+
+function render() {
+  cardsEl.innerHTML = '';
+  const list = getFiltered();
+  if (!list.length) {
+    cardsEl.innerHTML = '<p style="color:#99a">Книги не найдены.</p>';
+    return;
+  }
+  list.forEach(b => renderBook(b));
+}
+
+// ---- делегирование событий на контейнере ----
+cardsEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = Number(btn.dataset.id);
+  const book = books.find(x => x.id === id);
+  if (!book) return;
+
+  if (btn.dataset.action === 'toggle') {
+    book.available = !book.available;
+    log('Переключён статус: ' + book.title + ' → ' + (book.available ? 'доступна' : 'выдана'));
+    render();
+  }
+  else if (btn.dataset.action === 'delete') {
+    books = books.filter(x => x.id !== id);
+    log('Удалена книга: ' + book.title);
+    render();
+  }
+  else if (btn.dataset.action === 'rate') {
+    const v = prompt('Рейтинг (0–5) для "' + book.title + '":', book.rating);
+    const num = parseFloat(v);
+    if (!isNaN(num) && num >= 0 && num <= 5) { book.rating = num; render(); log('Оценено: ' + book.title + ' → ' + num); }
+    else log('Некорректный рейтинг');
+  }
+  else if (btn.dataset.action === 'edit') {
+    // ЗАДАНИЕ 1: редактирование через модальное окно
+    openEditModal(book);
+  }
+});
+
+// ---- ЗАДАНИЕ 1: модальное окно редактирования ----
+function openEditModal(book) {
+  const overlay = document.getElementById('editOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.getElementById('editTitle').value = book.title;
+  document.getElementById('editAuthor').value = book.author;
+  document.getElementById('editYear').value = book.year;
+  overlay.dataset.editId = book.id;
+}
+function closeEditModal() { document.getElementById('editOverlay').style.display = 'none'; }
+
+function renderBook(b) {
+  const div = document.createElement('div');
+  div.className = 'book-row';
+  const isOld = new Date().getFullYear() - b.year > 100;
+  div.innerHTML =
+    '<div><strong>' + b.title + '</strong>' + (isOld ? '<span class="old-tag">старее 100 лет</span>' : '') +
+    '<div class="book-meta">' + b.author + ' · ' + b.year + ' · ⭐ ' + b.rating +
+    ' · ' + (b.available ? '✅ доступна' : '❌ выдана') + '</div></div>' +
+    '<div class="book-actions">' +
+    '<button data-action="toggle" data-id="' + b.id + '">' + (b.available ? 'Выдать' : 'Вернуть') + '</button>' +
+    '<button data-action="rate" data-id="' + b.id + '">⭐</button>' +
+    '<button data-action="edit" data-id="' + b.id + '">✏️ Редактировать (зад. 1)</button>' +
+    '<button class="danger" data-action="delete" data-id="' + b.id + '">🗑</button>' +
+    '</div>';
+  cardsEl.appendChild(div);
+}
+
+// ---- обработчики формы добавления ----
+document.getElementById('addBtn').addEventListener('click', () => {
+  const t = document.getElementById('title').value.trim();
+  const a = document.getElementById('author').value.trim();
+  const y = parseInt(document.getElementById('year').value, 10);
+  if (!t || !a || isNaN(y)) { log('Заполните название, автора и год.'); return; }
+  books.push({ id: nextId++, title: t, author: a, year: y, rating: 0, available: true });
+  document.getElementById('title').value = '';
+  document.getElementById('author').value = '';
+  render();
+  log('Добавлена книга: ' + t);
+});
+
+// ---- зад. 2: живой поиск (input) ----
+document.getElementById('searchInput').addEventListener('input', () => {
+  render();
+});
+
+// ---- зад. 3: сортировка ----
+document.getElementById('sortSelect').addEventListener('change', () => render());
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  seed();
+  document.getElementById('searchInput').value = '';
+  document.getElementById('sortSelect').value = 'none';
+  render();
+  log('Сброс к стартовым книгам.');
+});
+
+// ---- модальное окно (DOM) ----
+const overlayHtml =
+  '<div id="editOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:50">' +
+  '<div style="background:#fff;border-radius:12px;padding:24px;min-width:320px;box-shadow:0 10px 40px rgba(0,0,0,.3)">' +
+  '<h3 style="margin-top:0">✏️ Редактировать книгу (зад. 1)</h3>' +
+  '<input type="text" id="editTitle" placeholder="Название" style="width:100%">' +
+  '<input type="text" id="editAuthor" placeholder="Автор" style="width:100%">' +
+  '<input type="number" id="editYear" placeholder="Год" style="width:100%">' +
+  '<div class="row"><button class="success" id="editSaveBtn">Сохранить</button>' +
+  '<button class="danger" id="editCancelBtn">Отмена</button></div>' +
+  '</div></div>';
+const temp = document.createElement('div');
+temp.innerHTML = overlayHtml;
+document.body.appendChild(temp.firstChild);
+
+document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+document.getElementById('editSaveBtn').addEventListener('click', () => {
+  const overlay = document.getElementById('editOverlay');
+  const id = Number(overlay.dataset.editId);
+  const book = books.find(x => x.id === id);
+  if (!book) { closeEditModal(); return; }
+  book.title = document.getElementById('editTitle').value.trim() || book.title;
+  book.author = document.getElementById('editAuthor').value.trim() || book.author;
+  const y = parseInt(document.getElementById('editYear').value, 10);
+  if (!isNaN(y)) book.year = y;
+  closeEditModal();
+  render();
+  log('Изменена книга (зад. 1): ' + book.title);
+});
+
+render();
+log('Приложение библиотеки запущено. Задания: редактирование (1), живой поиск (2), сортировка (3).');
+</script>
+</body>
+</html>

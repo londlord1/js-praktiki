@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР20 — Форма кредитной карты с живой карточкой</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+
+/* ===== Живая карточка (стили из основной практики) ===== */
+.preview-wrap{background:#8e99b5;border-radius:16px;padding:24px;margin:0 0 20px}
+.ccard{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;padding:24px 20px 20px;color:#fff;min-height:200px;box-shadow:0 8px 24px rgba(0,0,0,.3);transition:transform .6s;transform-style:preserve-3d}
+.ccard.visa{background:linear-gradient(135deg,#1a1f71 0%,#0d47a1 100%)}
+.ccard.mastercard{background:linear-gradient(135deg,#eb001b 0%,#f79e1b 50%,#ff5f00 100%)}
+.ccard.mir{background:linear-gradient(135deg,#00b8b8 0%,#008080 100%)}
+.ccard.amex{background:linear-gradient(135deg,#006fcf 0%,#003d7a 100%)}
+.ccard.unionpay{background:linear-gradient(135deg,#d52b1e 0%,#b71c1c 100%)}
+.ccard.discover{background:linear-gradient(135deg,#ff6b00 0%,#e65100 100%)}
+.ccard.jcb{background:linear-gradient(135deg,#007b3d 0%,#004d20 100%)}
+.ccard .brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.ccard .brand-name{font-size:14px;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:12px}
+.ccard .number{font-size:22px;letter-spacing:3px;font-family:'Courier New',monospace;margin-bottom:20px;word-break:break-all}
+.ccard .bottom{display:flex;justify-content:space-between;gap:20px}
+.ccard .bottom .label{font-size:10px;text-transform:uppercase;opacity:.6}
+.ccard .bottom .value{font-size:14px;letter-spacing:1px;text-transform:uppercase}
+.form-row{display:flex;gap:16px;flex-wrap:wrap}
+.form-row>.fg{flex:1;min-width:140px}
+label{font-size:13px;font-weight:600;display:block;margin-bottom:4px}
+input,select{margin:0 0 0 0;width:100%}
+.fg{margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР20 — Форма кредитной карты с живой карточкой</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: форма оплаты с живой картой + 7 доработок (UnionPay, маска CVV, автопереход, тёмная тема, localStorage, валюта, 3D-анимация).</div>
+
+<section class="card">
+  <h2>Живая карточка + все доработки (1–7)</h2>
+
+  <div class="row">
+    <button id="themeToggle">🌙 Переключить тёмную тему (зад. 4)</button>
+  </div>
+
+  <div class="preview-wrap" id="previewWrap">
+    <div class="ccard" id="card">
+      <div class="brand"><span id="brandIcon">💳</span><span class="brand-name" id="brandName">Банковская карта</span></div>
+      <div class="number" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+      <div class="bottom" style="align-items:flex-end">
+        <div><div class="label">Валюта (зад. 6)</div><div class="value" id="currencyDisplay">₽</div></div>
+        <div><div class="label">Владелец</div><div class="value" id="holderDisplay">ИМЯ ФАМИЛИЯ</div></div>
+        <div><div class="label">Срок</div><div class="value" id="expiryDisplay">MM/YY</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fg">
+    <label>Номер карты (зад. 1: UnionPay — 62..., зад. 3: автопереход)</label>
+    <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19">
+  </div>
+  <div class="fg">
+    <label>Владелец</label>
+    <input type="text" id="cardHolder" placeholder="IVAN PETROV">
+  </div>
+  <div class="form-row">
+    <div class="fg">
+      <label>Срок действия</label>
+      <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+    </div>
+    <div class="fg">
+      <label>CVV (зад. 2 — показывается точками)</label>
+      <input type="text" id="cardCvv" placeholder="•••" maxlength="4">
+    </div>
+    <div class="fg">
+      <label>Валюта (зад. 6)</label>
+      <select id="currency">
+        <option value="₽">RUB (₽)</option>
+        <option value="$">USD ($)</option>
+        <option value="€">EUR (€)</option>
+      </select>
+    </div>
+  </div>
+
+  <p class="hint">Зад. 7: наведите курсор на карточку или нажмите на неё — добавится 3D-поворот (подтверждение на JS не требуется; transform применяется при наведении/фокусе CVV).</p>
+  <div class="output" id="cardLog">Диагностика: введите номер карты, чтобы увидеть определение типа, маску CVV и автопереход фокуса.</div>
+</section>
+
+<script>
+const cardEl = document.getElementById('card');
+const numberInput = document.getElementById('cardNumber');
+const holderInput = document.getElementById('cardHolder');
+const expiryInput = document.getElementById('cardExpiry');
+const cvvInput = document.getElementById('cardCvv');
+const numberDisplay = document.getElementById('cardNumberDisplay');
+const holderDisplay = document.getElementById('holderDisplay');
+const expiryDisplay = document.getElementById('expiryDisplay');
+const brandIcon = document.getElementById('brandIcon');
+const brandName = document.getElementById('brandName');
+const currencyDisplay = document.getElementById('currencyDisplay');
+const cardLog = document.getElementById('cardLog');
+
+const STORE = 'cardData';
+
+// ===== утилиты =====
+function formatCardNumber(value) {
+  const cleaned = value.replace(/\D/g, '');
+  const groups = [];
+  for (let i = 0; i < cleaned.length; i += 4) groups.push(cleaned.slice(i, i + 4));
+  return groups.join(' ').slice(0, 19);
+}
+function getCardType(clean) {
+  const c = (clean || '').replace(/\s/g, '');
+  if (!c) return 'unknown';
+  const two = c.slice(0, 2), four = c.slice(0, 4);
+  if (two === '34' || two === '37') return 'amex';
+  if (c[0] === '4') return 'visa';
+  if ((two >= '51' && two <= '55') || (two >= '22' && two <= '27')) return 'mastercard';
+  if (c[0] === '2') return 'mir';
+  if (two === '62') return 'unionpay'; // зад. 1
+  if (four === '6011' || two === '65') return 'discover';
+  if (two === '35') return 'jcb';
+  return 'unknown';
+}
+const CARD_INFO = {
+  visa: { icon: '💳', name: 'Visa' },
+  mastercard: { icon: '💳', name: 'MasterCard' },
+  mir: { icon: '💳', name: 'МИР' },
+  amex: { icon: '💳', name: 'American Express' },
+  unionpay: { icon: '💳', name: 'UnionPay' },
+  discover: { icon: '💳', name: 'Discover' },
+  jcb: { icon: '💳', name: 'JCB' },
+  unknown: { icon: '💳', name: 'Банковская карта' }
+};
+function formatExpiry(value) {
+  const c = value.replace(/\D/g, '');
+  if (!c) return '';
+  let m = c.slice(0, 2);
+  if (m.length === 2 && parseInt(m) > 12) m = '12';
+  return c.length >= 2 ? m + '/' + c.slice(2, 4) : m;
+}
+
+function updateCard() {
+  const type = getCardType(numberInput.value);
+  const info = CARD_INFO[type] || CARD_INFO.unknown;
+  cardEl.className = 'ccard';
+  if (type !== 'unknown') cardEl.classList.add(type);
+  brandIcon.textContent = info.icon;
+  brandName.textContent = info.name;
+  numberDisplay.textContent = numberInput.value || '•••• •••• •••• ••••';
+  holderDisplay.textContent = holderInput.value.trim().toUpperCase() || 'ИМЯ ФАМИЛИЯ';
+  expiryDisplay.textContent = expiryInput.value || 'MM/YY';
+  const maxCvv = type === 'amex' ? 4 : 3;
+  cvvInput.maxLength = maxCvv;
+  cvvInput.placeholder = '•'.repeat(maxCvv);
+  currencyDisplay.textContent = document.getElementById('currency').value;
+}
+
+// ===== автозагрузка из localStorage (зад. 5) =====
+function loadCardData() {
+  const saved = localStorage.getItem(STORE);
+  if (saved) {
+    try {
+      const d = JSON.parse(saved);
+      numberInput.value = d.number || '';
+      holderInput.value = d.holder || '';
+      expiryInput.value = d.expiry || '';
+      cvvInput.value = d.cvv || '';
+      cardLog.textContent = 'Данные загружены из localStorage (зад. 5).';
+      updateCard();
+    } catch (e) {}
+  }
+}
+function saveCardData() {
+  localStorage.setItem(STORE, JSON.stringify({
+    number: numberInput.value,
+    holder: holderInput.value,
+    expiry: expiryInput.value,
+    cvv: cvvInput.value
+  }));
+}
+
+// ===== обработчики =====
+numberInput.addEventListener('input', function() {
+  this.value = formatCardNumber(this.value);
+  updateCard(); saveCardData();
+  cardLog.textContent = 'Тип карты: ' + (CARD_INFO[getCardType(this.value)] || {}).name + ' (зад. 1).';
+  // зад. 3: автопереход при 19 символах
+  if (this.value.length === 19) {
+    cardLog.textContent += '\nАвтопереход: номер заполнен, фокус на "Владелец" (зад. 3).';
+    holderInput.focus();
+  }
+});
+holderInput.addEventListener('input', function() {
+  this.value = this.value.toUpperCase().replace(/[^A-ZА-Я\s-]/g, '');
+  updateCard(); saveCardData();
+});
+expiryInput.addEventListener('input', function() {
+  this.value = formatExpiry(this.value);
+  updateCard(); saveCardData();
+});
+cvvInput.addEventListener('input', function() {
+  const type = getCardType(numberInput.value);
+  this.value = this.value.replace(/\D/g, '').slice(0, type === 'amex' ? 4 : 3);
+  // зад. 2: маска точек — храним цифры, показываем точки (поле type=text, маскируем таймером)
+  scheduleMask(this);
+  updateCard(); saveCardData();
+  cardLog.textContent = 'CVV маскируется точками, но хранится как ' + this.value.length + ' цифр (зад. 2).';
+});
+// зад. 7: 3D-анимация
+cvvInput.addEventListener('focus', () => { cardEl.style.transform = 'rotateY(12deg) rotateZ(2deg)'; });
+cvvInput.addEventListener('blur', () => { cardEl.style.transform = ''; });
+cardEl.addEventListener('mouseenter', () => { cardEl.style.transform = 'rotateY(10deg)'; });
+cardEl.addEventListener('mouseleave', () => { cardEl.style.transform = ''; });
+cardEl.addEventListener('click', () => { cardEl.classList.toggle('flipped'); });
+
+// backend 2: маска CVV (показываем точки вместо цифр на короткое время)
+let maskTimer = null;
+function scheduleMask(el) {
+  if (maskTimer) { clearTimeout(maskTimer); maskTimer = null; }
+  el.dataset.real = el.value;
+  if (el.value) {
+    el.value = '•'.repeat(el.value.length);
+    maskTimer = setTimeout(() => { el.value = el.dataset.real || ''; }, 900);
+  }
+}
+
+// ===== theme toggle (зад. 4) =====
+document.getElementById('themeToggle').addEventListener('click', function() {
+  const isDark = document.body.classList.toggle('dark-theme');
+  document.body.style.setProperty('--bg', isDark ? '#14161f' : '#eef1f8');
+  document.body.style.background = isDark ? '#14161f' : '#eef1f8';
+  document.body.style.color = isDark ? '#d6dae6' : '#1f2430';
+  [...document.querySelectorAll('.card')].forEach(c => {
+    c.style.background = isDark ? '#1e222f' : '#fff';
+  });
+  [...document.querySelectorAll('.card h2')].forEach(c => c.style.color = isDark ? '#e6e9f5' : 'inherit');
+  cardLog.textContent = isDark ? 'Тёмная тема включена 💡 (зад. 4).' : 'Светлая тема (зад. 4).';
+});
+
+// currency (зад. 6)
+document.getElementById('currency').addEventListener('change', () => {
+  updateCard();
+  cardLog.textContent = 'Валюта карты: ' + document.getElementById('currency').value + ' (зад. 6).';
+});
+
+loadCardData();
+</script>
+</body>
+</html>

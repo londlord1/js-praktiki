@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР14 — Объекты и деструктуризация</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+label{display:block;font-size:13px;color:#667;margin:6px 0 2px}
+input[type="text"],input[type="number"],input[type="email"],input[type="tel"]{width:100%;max-width:280px}
+fieldset{border:1px solid #d6dce8;border-radius:8px;padding:12px 16px;margin:12px 0}
+legend{font-weight:bold;color:#3b5bdb;padding:0 8px}
+.exp-item{background:#eef1f8;border-left:3px solid #3b5bdb;padding:8px 12px;border-radius:6px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР14 — Объекты и деструктуризация</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Spread, деструктуризация, иммутабельность, shorthand-свойства, localStorage.</div>
+
+<section class="card">
+    <h2>Конструктор резюме</h2>
+    <p class="hint">Заполните форму и соберите объект резюме. Используются spread-оператор, сокращённый синтаксис и деструктуризация.</p>
+    <div class="grid2">
+        <div>
+            <fieldset>
+                <legend>Личная информация</legend>
+                <label>Имя</label>
+                <input type="text" id="firstName" placeholder="Иван">
+                <label>Фамилия</label>
+                <input type="text" id="lastName" placeholder="Иванов">
+                <label>Возраст</label>
+                <input type="number" id="age" placeholder="30" min="0">
+            </fieldset>
+            <fieldset>
+                <legend>Адрес</legend>
+                <label>Город</label>
+                <input type="text" id="city" placeholder="Москва">
+                <label>Улица</label>
+                <input type="text" id="street" placeholder="Ленина">
+                <label>Дом</label>
+                <input type="text" id="building" placeholder="15">
+                <label>Индекс</label>
+                <input type="text" id="zip" placeholder="123456">
+            </fieldset>
+        </div>
+        <div>
+            <fieldset>
+                <legend>Навыки</legend>
+                <div class="row">
+                    <input type="text" id="skillInput" placeholder="Например: JavaScript">
+                    <button class="success" id="addSkillBtn">➕ Добавить</button>
+                </div>
+                <ul id="skillsList" style="list-style:none;padding:0;"></ul>
+            </fieldset>
+            <fieldset>
+                <legend>Опыт работы</legend>
+                <label>Компания</label>
+                <input type="text" id="expCompany" placeholder="Яндекс">
+                <label>Должность</label>
+                <input type="text" id="expPosition" placeholder="Разработчик">
+                <label>Лет</label>
+                <input type="number" id="expYears" placeholder="3" min="0">
+                <button class="success" id="addExpBtn">➕ Добавить опыт</button>
+                <div id="expList" style="margin-top:8px;"></div>
+            </fieldset>
+            <fieldset>
+                <legend>Контакты</legend>
+                <label>Email</label>
+                <input type="email" id="email" placeholder="ivan@example.com">
+                <label>Телефон</label>
+                <input type="tel" id="phone" placeholder="+7-999-123-45-67">
+            </fieldset>
+        </div>
+    </div>
+    <div class="row">
+        <button id="buildBtn">⚙️ Собрать резюме</button>
+        <button id="saveBtn" class="success">💾 Сохранить</button>
+        <button id="loadBtn" class="success">📂 Загрузить последнее</button>
+        <button id="clearBtn" class="danger">🗑️ Очистить</button>
+    </div>
+    <div class="output" id="output">Резюме появится здесь...</div>
+</section>
+
+<section class="card">
+    <h2>Иммутабельное обновление (задание 2)</h2>
+    <p class="hint">Функция updateResumeField обновляет одно поле в объекте, не изменяя оригинал, через spread на каждом уровне.</p>
+    <div class="row">
+        <input type="text" id="fieldPath" value="address.city" style="flex:1;min-width:160px;" placeholder="путь.к.полю">
+        <input type="text" id="fieldValue" value="Санкт-Петербург" style="flex:1;min-width:160px;" placeholder="новое значение">
+        <button id="updateBtn">🔁 Иммутабельно обновить</button>
+    </div>
+    <div class="output" id="immutOutput">Нажмите кнопку, чтобы обновить адрес в собранном резюме без мутации объекта.</div>
+</section>
+
+<script>
+(function () {
+    let skills = [];
+    let experienceList = [];
+    let currentResume = null;
+    const STORAGE_KEY = 'pr14-resume';
+
+    const output = document.getElementById('output');
+
+    function renderSkills() {
+        document.getElementById('skillsList').innerHTML = skills.map(function (s) {
+            return '<li>' + s + ' <button data-skill="' + s + '" class="danger" style="border-radius:50%;width:24px;height:24px;padding:0;">×</button></li>';
+        }).join('');
+        document.querySelectorAll('[data-skill]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const skill = btn.dataset.skill;
+                skills = skills.filter(function (s) { return s !== skill; });
+                renderSkills();
+            });
+        });
+    }
+
+    document.getElementById('addSkillBtn').addEventListener('click', function () {
+        const input = document.getElementById('skillInput');
+        const val = input.value.trim();
+        if (!val || skills.includes(val)) {
+            input.value = '';
+            return;
+        }
+        skills.push(val);
+        input.value = '';
+        renderSkills();
+        output.textContent = 'Добавлен навык: ' + val;
+    });
+
+    function renderExp() {
+        document.getElementById('expList').innerHTML = experienceList.map(function (job, i) {
+            return '<div class="exp-item"><span>' + job['position'] + ' в ' + job['company'] + ' (' + job['years'] + ' лет)</span><button class="danger" data-exp="' + i + '" style="border-radius:50%;width:24px;height:24px;padding:0;">×</button></div>';
+        }).join('');
+        document.querySelectorAll('[data-exp]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                experienceList.splice(Number(btn.dataset.exp), 1);
+                renderExp();
+            });
+        });
+    }
+
+    document.getElementById('addExpBtn').addEventListener('click', function () {
+        const company = document.getElementById('expCompany').value.trim();
+        const position = document.getElementById('expPosition').value.trim();
+        const years = Number(document.getElementById('expYears').value) || 0;
+        if (!company || !position) return;
+        const job = { company, position, years };
+        experienceList = [...experienceList, job];
+        document.getElementById('expCompany').value = '';
+        document.getElementById('expPosition').value = '';
+        document.getElementById('expYears').value = '';
+        renderExp();
+        output.textContent = 'Добавлен опыт: ' + position + ' в ' + company;
+    });
+
+    function buildResume() {
+        const personalInfo = {
+            firstName: document.getElementById('firstName').value.trim(),
+            lastName: document.getElementById('lastName').value.trim(),
+            age: Number(document.getElementById('age').value) || 0
+        };
+        const address = {
+            city: document.getElementById('city').value.trim(),
+            street: document.getElementById('street').value.trim(),
+            building: document.getElementById('building').value.trim(),
+            zip: document.getElementById('zip').value.trim()
+        };
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const contacts = { email, phone };
+
+        return {
+            ...personalInfo,
+            address: { ...address },
+            skills: [...skills],
+            experience: [...experienceList],
+            contacts: { ...contacts }
+        };
+    }
+
+    function displayResume(resume) {
+        const {
+            firstName = 'Неизвестный',
+            lastName = 'Пользователь',
+            age = 'не указан',
+            address: { city = 'Город не указан', street = '', building = '', zip = '' } = {},
+            skills = [],
+            experience = [],
+            contacts: { email = 'не указан', phone = 'не указан' } = {}
+        } = resume;
+
+        const fullName = firstName + ' ' + lastName;
+        const addrParts = [city, street, building, zip].filter(Boolean).join(', ');
+        const skillsString = skills.length ? skills.join(', ') : 'не указаны';
+
+        let html = '=== РЕЗЮМЕ: ' + fullName + ' ===\n';
+        html += 'Возраст: ' + (age === 'не указан' ? 'не указан' : age + ' лет') + '\n';
+        html += 'Адрес: ' + (addrParts || 'не указан') + '\n';
+        html += 'Навыки: ' + skillsString + '\n';
+        html += 'Email: ' + email + '\n';
+        html += 'Телефон: ' + phone + '\n';
+
+        if (experience.length) {
+            html += '\nОпыт работы:\n';
+            experience.forEach(function (job) {
+                html += '  • ' + job.position + ' в ' + job.company + ' (' + job.years + ' лет)\n';
+            });
+        }
+        return html;
+    }
+
+    document.getElementById('buildBtn').addEventListener('click', function () {
+        currentResume = buildResume();
+        output.textContent = displayResume(currentResume);
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', function () {
+        currentResume = buildResume();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentResume));
+        output.textContent = '✅ Резюме сохранено в localStorage (JSON):\n\n' + JSON.stringify(currentResume, null, 2);
+    });
+
+    document.getElementById('loadBtn').addEventListener('click', function () {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+            output.textContent = 'Сохранённого резюме нет.';
+            return;
+        }
+        try {
+            currentResume = JSON.parse(saved);
+            output.textContent = '📂 Загружено последнее резюме:\n\n' + displayResume(currentResume);
+        } catch (e) {
+            output.textContent = 'Ошибка загрузки резюме.';
+        }
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function () {
+        document.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+        skills = [];
+        experienceList = [];
+        currentResume = null;
+        renderSkills();
+        renderExp();
+        output.textContent = 'Форма и данные очищены.';
+    });
+
+    /*** Задание 2: Иммутабельное обновление ***/
+    function updateResumeField(resume, fieldPath, newValue) {
+        const parts = fieldPath.split('.');
+        if (parts.length === 1) {
+            return { ...resume, [parts[0]]: newValue };
+        }
+        if (parts.length === 2) {
+            return {
+                ...resume,
+                [parts[0]]: {
+                    ...(resume[parts[0]] || {}),
+                    [parts[1]]: newValue
+                }
+            };
+        }
+        return resume;
+    }
+
+    document.getElementById('updateBtn').addEventListener('click', function () {
+        if (!currentResume) {
+            output.textContent = 'Сначала соберите резюме (кнопка «Собрать резюме»).';
+            return;
+        }
+        const path = document.getElementById('fieldPath').value.trim();
+        const value = document.getElementById('fieldValue').value.trim();
+        const originalSnapshot = JSON.stringify(currentResume);
+        const updated = updateResumeField(currentResume, path, value);
+
+        output.textContent =
+            '=== Иммутабельное обновление: ' + path + ' = "' + value + '" ===\n\n' +
+            'Оригинал не изменён: ' + (JSON.stringify(currentResume) === originalSnapshot) + '\n' +
+            'Новый объект — получился (поле ' + path + '):\n\n' +
+            JSON.stringify(updated, null, 2);
+
+        currentResume = updated;
+    });
+
+    renderSkills();
+    renderExp();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР02 — Функции и работа с массивами</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР02 — Функции и работа с массивами</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения</p>
+
+    <section class="card">
+        <h2>Задание 1: Калькулятор (add, subtract, multiply, divide)</h2>
+        <p class="hint">Введите два числа и выберите операцию.</p>
+        <div class="row">
+            <input type="number" id="pr02-a" placeholder="Число A" style="width:110px" value="10">
+            <select id="pr02-op">
+                <option value="add">+ Сложение</option>
+                <option value="subtract">− Вычитание</option>
+                <option value="multiply">× Умножение</option>
+                <option value="divide">÷ Деление</option>
+            </select>
+            <input type="number" id="pr02-b" placeholder="Число B" style="width:110px" value="5">
+            <button onclick="runCalc()">Вычислить</button>
+        </div>
+        <div class="output" id="pr02-calc-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 2: Среднее арифметическое массива</h2>
+        <p class="hint">Введите числа через запятую — функция вернёт их среднее значение.</p>
+        <div class="row">
+            <input type="text" id="pr02-avg-input" placeholder="Например: 10, 20, 30, 40" style="width:260px" value="10, 20, 30, 40">
+            <button onclick="runAverage()">Вычислить среднее</button>
+        </div>
+        <div class="output" id="pr02-avg-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 3: Обратный порядок массива</h2>
+        <p class="hint">Функция возвращает новый массив с элементами в обратном порядке (без reverse()).</p>
+        <div class="row">
+            <input type="text" id="pr02-rev-input" placeholder="Например: 1, 2, 3, 4, 5" style="width:260px" value="1, 2, 3, 4, 5">
+            <button onclick="runReverse()">Развернуть массив</button>
+        </div>
+        <div class="output" id="pr02-rev-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 4: Удаление дубликатов</h2>
+        <p class="hint">Введите элементы через запятую — функция удалит повторяющиеся.</p>
+        <div class="row">
+            <input type="text" id="pr02-dup-input" placeholder="Например: a, b, a, c, b" style="width:260px" value="яблоко, банан, яблоко, груша, банан">
+            <button onclick="runUnique()">Удалить дубликаты</button>
+        </div>
+        <div class="output" id="pr02-dup-output"></div>
+    </section>
+
+    <script>
+        function add(a, b) { return a + b; }
+        function subtract(a, b) { return a - b; }
+        function multiply(a, b) { return a * b; }
+        function divide(a, b) {
+            if (b === 0) return 'Деление на ноль невозможно!';
+            return a / b;
+        }
+
+        function runCalc() {
+            const a = parseFloat(document.getElementById('pr02-a').value);
+            const b = parseFloat(document.getElementById('pr02-b').value);
+            const op = document.getElementById('pr02-op').value;
+            const out = document.getElementById('pr02-calc-output');
+            if (isNaN(a) || isNaN(b)) {
+                out.textContent = 'Пожалуйста, введите оба числа.';
+                return;
+            }
+            const ops = {
+                add: 'Сложение',
+                subtract: 'Вычитание',
+                multiply: 'Умножение',
+                divide: 'Деление'
+            };
+            const symbols = { add: '+', subtract: '-', multiply: '×', divide: '÷' };
+            const result = divide(a, b);
+            let resultText = result;
+            if (typeof result === 'number') {
+                resultText = (Math.round(result * 1000) / 1000);
+            }
+            out.textContent = ops[op] + ': ' + a + ' ' + symbols[op] + ' ' + b + '\nРезультат = ' + resultText;
+        }
+
+        function parseArray(str) {
+            return str.split(',').map(item => item.trim()).filter(item => item !== '');
+        }
+
+        function average(arr) {
+            if (arr.length === 0) return 0;
+            let sum = 0;
+            for (let i = 0; i < arr.length; i++) {
+                sum += Number(arr[i]);
+            }
+            return sum / arr.length;
+        }
+
+        function runAverage() {
+            const raw = document.getElementById('pr02-avg-input').value;
+            const out = document.getElementById('pr02-avg-output');
+            const nums = parseArray(raw).map(Number);
+            if (nums.length === 0 || nums.some(isNaN)) {
+                out.textContent = 'Пожалуйста, введите корректные числа через запятую.';
+                return;
+            }
+            const avg = average(nums);
+            out.textContent = 'Массив: [' + nums.join(', ') + ']\nСреднее арифметическое: ' + (Math.round(avg * 100) / 100);
+        }
+
+        function reverseArray(arr) {
+            const result = [];
+            for (let i = arr.length - 1; i >= 0; i--) {
+                result.push(arr[i]);
+            }
+            return result;
+        }
+
+        function runReverse() {
+            const raw = document.getElementById('pr02-rev-input').value;
+            const out = document.getElementById('pr02-rev-output');
+            const arr = parseArray(raw);
+            if (arr.length <= 1) {
+                out.textContent = 'Введите массив из двух и более элементов через запятую.';
+                return;
+            }
+            const rev = reverseArray(arr);
+            out.textContent = 'Исходный массив: [' + arr.join(', ') + ']\nОбратный порядок: [' + rev.join(', ') + ']';
+        }
+
+        function uniqueElements(arr) {
+            const result = [];
+            for (let i = 0; i < arr.length; i++) {
+                if (result.indexOf(arr[i]) === -1) {
+                    result.push(arr[i]);
+                }
+            }
+            return result;
+        }
+
+        function runUnique() {
+            const raw = document.getElementById('pr02-dup-input').value;
+            const out = document.getElementById('pr02-dup-output');
+            const arr = parseArray(raw);
+            if (arr.length === 0) {
+                out.textContent = 'Введите элементы через запятую.';
+                return;
+            }
+            const unique = uniqueElements(arr);
+            const removed = arr.length - unique.length;
+            out.textContent = 'Исходный массив: [' + arr.join(', ') + ']\n' +
+                'Без дубликатов: [' + unique.join(', ') + ']\n' +
+                'Удалено элементов: ' + removed;
+        }
+    </script>
+</body>
+</html>

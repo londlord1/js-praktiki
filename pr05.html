@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР05 — Взаимодействие с HTML и DOM</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        body.dark{background:#12151c;color:#e6e9ef}
+        body.dark .card{background:#1e2430;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+        body.dark .output{background:#0a0e16}
+        body.dark .sub{color:#94a3b8}
+        body.dark input,body.dark select{background:#12151c;color:#e6e9ef;border-color:#3a4254}
+        body.dark .hint{color:#94a3b8}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+        #counter-value{display:inline-block;min-width:70px;text-align:center;font-size:34px;font-weight:bold;padding:6px 14px;background:#f0f3fa;border-radius:10px;margin:0 8px}
+        body.dark #counter-value{background:#0f172a}
+        #theme-btn{width:100%}
+        .gallery{display:flex;gap:10px;flex-wrap:wrap}
+        .gallery .thumb{width:90px;height:90px;border-radius:10px;border:3px solid transparent;cursor:pointer;overflow:hidden;object-fit:cover;background:#ddd}
+        .gallery .thumb:hover{border-color:#3b5bdb}
+        .gallery .thumb.active{border-color:#3b5bdb;box-shadow:0 0 0 2px #3b5bdb66}
+        #gallery-big{width:100%;max-width:440px;aspect-ratio:16/10;border-radius:10px;object-fit:cover;background:#ddd;margin-top:12px}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР05 — Взаимодействие с HTML и DOM</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения</p>
+
+    <section class="card">
+        <h2>Задание 1: Счётчик</h2>
+        <p class="hint">Кнопки «+1» и «−1» изменяют значение счётчика.</p>
+        <div class="row">
+            <button id="btn-minus">−1</button>
+            <span id="counter-value">0</span>
+            <button id="btn-plus">+1</button>
+            <button id="btn-reset" class="danger">Сброс</button>
+        </div>
+        <div class="output" id="pr05-counter-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 2: Переключатель светлой/тёмной темы</h2>
+        <p class="hint">Кнопка меняет цвет фона и текста страницы.</p>
+        <button id="theme-btn">🌙 Включить тёмную тему</button>
+    </section>
+
+    <section class="card">
+        <h2>Задание 3: Валидация формы</h2>
+        <p class="hint">Проверка полей «Имя» и «Email» на пустые значения.</p>
+        <div class="row">
+            <input type="text" id="form-name" placeholder="Имя">
+            <input type="email" id="form-email" placeholder="Email">
+            <button id="form-submit">Проверить</button>
+        </div>
+        <div class="output" id="pr05-form-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 4: Галерея изображений</h2>
+        <p class="hint">Клик по миниатюре отображает картинку в большом блоке.</p>
+        <div class="gallery" id="gallery">
+            <img class="thumb active" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90'><rect width='90' height='90' fill='%23e74c3c'/><text x='45' y='52' font-size='22' fill='white' text-anchor='middle'>1</text></svg>" data-big="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='275'><rect width='440' height='275' fill='%23e74c3c'/><text x='220' y='155' font-size='72' fill='white' text-anchor='middle'>1</text></svg>" alt="Красный">
+            <img class="thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90'><rect width='90' height='90' fill='%2327ae60'/><text x='45' y='52' font-size='22' fill='white' text-anchor='middle'>2</text></svg>" data-big="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='275'><rect width='440' height='275' fill='%2327ae60'/><text x='220' y='155' font-size='72' fill='white' text-anchor='middle'>2</text></svg>" alt="Зелёный">
+            <img class="thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90'><rect width='90' height='90' fill='%232e86de'/><text x='45' y='52' font-size='22' fill='white' text-anchor='middle'>3</text></svg>" data-big="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='275'><rect width='440' height='275' fill='%232e86de'/><text x='220' y='155' font-size='72' fill='white' text-anchor='middle'>3</text></svg>" alt="Синий">
+            <img class="thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90'><rect width='90' height='90' fill='%23f39c12'/><text x='45' y='52' font-size='22' fill='white' text-anchor='middle'>4</text></svg>" data-big="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='275'><rect width='440' height='275' fill='%23f39c12'/><text x='220' y='155' font-size='72' fill='white' text-anchor='middle'>4</text></svg>" alt="Оранжевый">
+        </div>
+        <img id="gallery-big" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='275'><rect width='440' height='275' fill='%23e74c3c'/><text x='220' y='150' font-size='64' fill='white' text-anchor='middle'>1</text></svg>" alt="Изображение 1">
+    </section>
+
+    <script>
+        let counter = 0;
+        const counterValue = document.getElementById('counter-value');
+        const counterOut = document.getElementById('pr05-counter-output');
+
+        function updateCounter(label) {
+            counterValue.textContent = counter;
+            counterOut.textContent = label + '\nТекущее значение: ' + counter;
+        }
+
+        document.getElementById('btn-plus').addEventListener('click', function() {
+            counter++;
+            updateCounter('Действие: +1');
+        });
+
+        document.getElementById('btn-minus').addEventListener('click', function() {
+            counter--;
+            updateCounter('Действие: −1');
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', function() {
+            counter = 0;
+            updateCounter('Действие: сброс');
+        });
+
+        const themeBtn = document.getElementById('theme-btn');
+        let isDark = false;
+        themeBtn.addEventListener('click', function() {
+            isDark = !isDark;
+            document.body.classList.toggle('dark', isDark);
+            themeBtn.textContent = isDark ? '☀️ Включить светлую тему' : '🌙 Включить тёмную тему';
+        });
+
+        document.getElementById('form-submit').addEventListener('click', function() {
+            const name = document.getElementById('form-name').value.trim();
+            const email = document.getElementById('form-email').value.trim();
+            const out = document.getElementById('pr05-form-output');
+            if (name === '' || email === '') {
+                out.textContent = 'Ошибка: поля Имя и Email не должны быть пустыми.\n\n' +
+                    (name === '' ? '✖ Поле "Имя" пустое\n' : '✓ Поле "Имя" заполнено\n') +
+                    (email === '' ? '✖ Поле "Email" пустое' : '✓ Поле "Email" заполнено');
+            } else {
+                out.textContent = 'Форма заполнена корректно:\n\nИмя: ' + name + '\nEmail: ' + email;
+            }
+        });
+
+        const thumbs = document.querySelectorAll('.gallery .thumb');
+        const big = document.getElementById('gallery-big');
+        thumbs.forEach(function(thumb) {
+            thumb.addEventListener('click', function() {
+                thumbs.forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+                big.src = thumb.dataset.big;
+                big.alt = thumb.alt;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Учебные практические работы по JavaScript</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1060px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+h1{text-align:center;font-size:26px;margin-bottom:4px}
+.sub{color:#667;text-align:center;margin:6px 0 8px}
+.meta{text-align:center;color:#889;font-size:13px;margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+a.card{background:#fff;border-radius:12px;padding:16px 18px;text-decoration:none;color:#1f2430;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:transform .15s,box-shadow .15s;border:1px solid transparent}
+a.card:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.12);border-color:#3b5bdb}
+a.card .num{font-size:13px;color:#3b5bdb;font-weight:700}
+a.card .title{font-size:15px;font-weight:600;margin:6px 0}
+a.card .grp{display:inline-block;font-size:11px;color:#fff;background:#8a94b5;border-radius:10px;padding:2px 8px}
+a.card.react .grp{background:#61dafb;color:#0b2230}
+a.card .grp.vanilla{background:#3b5bdb}
+section.group-title{margin:26px 0 10px;font-size:18px;font-weight:700;color:#2a3550}
+</style>
+</head>
+<body>
+<h1>JavaScript — учебные практические работы</h1>
+<p class="sub">Раздел «Задания для самостоятельного выполнения» (самодостаточные HTML-файлы)</p>
+<p class="meta">ПР01–ПР25 — чистый JavaScript · ПР26–ПР32 — React 18 (CDN)</p>
+
+<div class="grid">
+
+<div style="grid-column:1/-1;display:contents">
+<div style="grid-column:1/-1;display:block;font-size:18px;font-weight:700;color:#2a3550">Базовый JavaScript</div>
+  <a class="card" href="pr01.html"><span class="num">ПР01</span><div class="title">Основы синтаксиса и типы данных</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr02.html"><span class="num">ПР02</span><div class="title">Функции и работа с массивами</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr03.html"><span class="num">ПР03</span><div class="title">Массивы и операции с ними</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr04.html"><span class="num">ПР04</span><div class="title">Использование функций для решения базовых задач</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr05.html"><span class="num">ПР05</span><div class="title">Взаимодействие с HTML и DOM</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr06.html"><span class="num">ПР06</span><div class="title">Объекты JavaScript (To-Do менеджер)</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr07.html"><span class="num">ПР07</span><div class="title">Валидация формы средствами JavaScript</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr08.html"><span class="num">ПР08</span><div class="title">Вычисления, связанные с настройками пользователя и браузера</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr09.html"><span class="num">ПР09</span><div class="title">Обработка событий с использованием JavaScript</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr10.html"><span class="num">ПР10</span><div class="title">Доступ к HTML-элементам при помощи DOM</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr11.html"><span class="num">ПР11</span><div class="title">Контроль за событиями в окне браузера</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr12.html"><span class="num">ПР12</span><div class="title">Массивы и строки. Структуры данных</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr13.html"><span class="num">ПР13</span><div class="title">Методы перебора массивов</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr14.html"><span class="num">ПР14</span><div class="title">Объекты и деструктуризация</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr15.html"><span class="num">ПР15</span><div class="title">Set, Map и Array</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr16.html"><span class="num">ПР16</span><div class="title">Комплексная работа с JSON и структурами</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr17.html"><span class="num">ПР17</span><div class="title">Инкапсуляция. Приватные переменные</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr18.html"><span class="num">ПР18</span><div class="title">Создание расширения браузера</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr19.html"><span class="num">ПР19</span><div class="title">Чат-бот</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr20.html"><span class="num">ПР20</span><div class="title">Форма кредитной карты с живой карточкой</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr21.html"><span class="num">ПР21</span><div class="title">Имитация работы с API Госуслуг</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr22.html"><span class="num">ПР22</span><div class="title">Основы классов. Создание модели данных</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr23.html"><span class="num">ПР23</span><div class="title">Наследование и полиморфизм</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr24.html"><span class="num">ПР24</span><div class="title">Взаимодействие с DOM. Рендеринг и события</div><span class="grp vanilla">JS</span></a>
+  <a class="card" href="pr25.html"><span class="num">ПР25</span><div class="title">Сохранение данных в LocalStorage</div><span class="grp vanilla">JS</span></a>
+</div>
+
+<div style="grid-column:1/-1;display:block;font-size:18px;font-weight:700;color:#2a3550;margin-top:10px">React</div>
+  <a class="card react" href="pr26.html"><span class="num">ПР26</span><div class="title">React: приложение «Счётчик кликов»</div><span class="grp">React</span></a>
+  <a class="card react" href="pr27.html"><span class="num">ПР27</span><div class="title">React: списки и ключи</div><span class="grp">React</span></a>
+  <a class="card react" href="pr28.html"><span class="num">ПР28</span><div class="title">React: props, динамические стили, подъём состояния</div><span class="grp">React</span></a>
+  <a class="card react" href="pr29.html"><span class="num">ПР29</span><div class="title">React: асинхронные операции и внешние ресурсы</div><span class="grp">React</span></a>
+  <a class="card react" href="pr30.html"><span class="num">ПР30</span><div class="title">React: обмен данными через API</div><span class="grp">React</span></a>
+  <a class="card react" href="pr31.html"><span class="num">ПР31</span><div class="title">React: формы и списки</div><span class="grp">React</span></a>
+  <a class="card react" href="pr32.html"><span class="num">ПР32</span><div class="title">React: фильтрация и сортировка</div><span class="grp">React</span></a>
+
+</div>
+</body>
+</html>

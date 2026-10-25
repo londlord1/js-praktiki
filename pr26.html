@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ПР26 — Счётчик кликов</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f0f2f5;color:#212529}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e0e0e0}
+  .topbar h1{margin:0;font-size:20px;color:#1c2333}
+  .topbar .back{color:#3b5bdb;text-decoration:none;font-size:14px;font-weight:600}
+  .wrap{max-width:760px;margin:24px auto;padding:0 16px}
+  .task{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:22px 24px;margin-bottom:22px}
+  .task h2{margin:0 0 14px;font-size:18px;color:#3b5bdb;border-bottom:2px solid #eef1f8;padding-bottom:10px}
+  .card{background:#f8f9fc;border:1px solid #e6e9f2;border-radius:10px;padding:18px;margin-top:12px}
+  .display{font-size:60px;font-weight:700;text-align:center;padding:18px;background:#fff;border-radius:10px;box-shadow:inset 0 2px 5px rgba(0,0,0,.06)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  button{padding:10px 18px;font-size:15px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb;transition:background .2s,transform .1s}
+  button:hover{filter:brightness(1.08)}
+  button:active{transform:translateY(1px)}
+  button:disabled{background:#c8ccd8;cursor:not-allowed;filter:none}
+  .btn-green{background:#2f9e44}.btn-red{background:#e03131}.btn-gray{background:#868e96}.btn-orange{background:#f08c00}.btn-teal{background:#0c8599}
+  input{padding:10px 12px;font-size:15px;border:2px solid #dfe2ea;border-radius:8px;outline:none;width:140px}
+  input:focus{border-color:#3b5bdb}
+  .warn{background:#ffe3e3;color:#c92a2a;border:1px solid #ffc9c9;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:15px}
+  .info{color:#666;font-size:14px;margin-top:8px}
+  .bar{height:18px;background:#edf0f5;border-radius:9px;overflow:hidden;margin-top:12px}
+  .bar>div{height:100%;background:#2f9e44;transition:width .3s ease,background .3s}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chips span{background:#eef1f8;color:#364fc7;padding:4px 10px;border-radius:14px;font-size:13px}
+  .stepCtrl{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:12px}
+  .stepCtrl button{padding:8px 14px;font-size:14px}
+  .pill{display:inline-block;background:#eef1f8;color:#364fc7;padding:6px 14px;border-radius:16px;font-size:14px;font-weight:600}
+</style></head><body>
+<div class="topbar"><h1>ПР26 — Написание приложения React. Счётчик кликов</h1><a class="back" href="index.html">← Все работы</a></div>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState } = React;
+
+function CounterTask({ initial = 0, max = 20, stepDefault = 1 }) {
+  const [count, setCount] = useState(initial);
+  const [inputValue, setInputValue] = useState('');
+  const [history, setHistory] = useState([]);
+  const [step, setStep] = useState(stepDefault);
+
+  const update = (newCount) => {
+    const clamped = Math.max(0, Math.min(max, newCount));
+    setCount(clamped);
+    setHistory(prev => [...prev, clamped].slice(-30));
+  };
+
+  const inc = () => update(count + step);
+  const dec = () => update(count - step);
+  const reset = () => { setCount(0); };
+  const double = () => update(count * 2);
+
+  const handleInput = (e) => {
+    const value = e.target.value;
+    setInputValue(value);
+    const n = Number(value);
+    if (value !== '' && !isNaN(n)) setCount(Math.max(0, Math.min(max, Math.round(n))));
+  };
+
+  const histDedup = cnt => {
+    setCount(cnt);
+    setHistory(prev => [...prev, cnt].slice(-30));
+  };
+
+  const progress = Math.min((count / max) * 100, 100);
+  const barColor = count > 15 ? '#e03131' : '#2f9e44';
+  const textColor = count > 10 ? '#e03131' : (count < -5 ? '#e03131' : '#212529');
+
+  return (
+    <div>
+      <div className="card">
+        <div className="display" style={{ color: textColor }}>{count}</div>
+        <div className="row">
+          <button onClick={dec}>−{step}</button>
+          <button onClick={inc}>+{step}</button>
+          <button className="btn-green" onClick={double}>×2</button>
+          <button className="btn-red" onClick={() => { setCount(0); setHistory(prev => [...prev, 0]); setInputValue(''); }}>Сброс</button>
+        </div>
+
+        <div className="stepCtrl">
+          <span className="pill">Шаг: {step}</span>
+          <button className="btn-gray" onClick={() => setStep(prev => Math.max(1, prev - 1))}>Шаг −1</button>
+          <button className="btn-gray" onClick={() => setStep(prev => prev + 1)}>Шаг +1</button>
+          <button className="btn-teal" onClick={() => setStep(10)}>Шаг ×10</button>
+        </div>
+
+        <div style={{ marginTop: 16, display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center' }}>
+          <input type="number" value={inputValue} onChange={handleInput} placeholder="Введите число" />
+          <button className="btn-orange" onClick={() => { inputValue !== '' && !isNaN(Number(inputValue)) && histDedup(Math.max(0, Math.min(max, Math.round(Number(inputValue))))); }}>Установить</button>
+        </div>
+
+        <div className="bar">
+          <div style={{ width: `${progress}%`, background: barColor }} />
+        </div>
+        <div className="info">Прогресс: {Math.round(progress)}% (макс. {max}, при {max} кнопка «+{step}» блокируется)</div>
+
+        {count >= max && <div className="warn">⚠️ Достигнут максимум ({max}) — увеличение заблокировано.</div>}
+        {count < -5 && <div className="warn">⚠️ Счётчик опустился ниже −5!</div>}
+
+        {history.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ fontSize: 15 }}>История изменений ({history.length}):</strong>
+              <button className="btn-gray" onClick={() => setHistory([])} style={{ fontSize: 13, padding: '4px 12px' }}>Очистить</button>
+            </div>
+            <div className="chips">
+              {history.map((value, index) => <span key={index}>{value}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CounterWithLimits({ max = 20 }) {
+  const [count, setCount] = useState(0);
+  const inc = () => setCount(prev => Math.min(max, prev + 1));
+  const dec = () => setCount(prev => Math.max(0, prev - 1));
+  const progress = Math.min((count / max) * 100, 100);
+
+  return (
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <strong>Счётчик 0–{max}</strong>
+        <span className="pill">{count}</span>
+      </div>
+      <div className="row">
+        <button onClick={dec} disabled={count === 0} className="btn-red">−1</button>
+        <button onClick={inc} disabled={count >= max} className="btn-green">+1</button>
+        <button className="btn-gray" onClick={() => setCount(0)}>Сброс</button>
+      </div>
+      <div className="bar">
+        <div style={{ width: `${progress}%`, background: count > 15 ? '#e03131' : '#2f9e44' }} />
+      </div>
+      <div className="info">При {max} кнопка «+1» заблокирована.</div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="wrap">
+      <div className="task">
+        <h2>Задание 1: Кнопка удвоения «×2»</h2>
+        <p style={{ color: '#495057' }}>Добавлена кнопка, умножающая счётчик на 2 (с ограничением максимума).</p>
+        <CounterTask stepDefault={1} />
+      </div>
+
+      <div className="task">
+        <h2>Задание 2: Поле ввода произвольного числа</h2>
+        <p style={{ color: '#495057' }}>Ввод числа мгновенно устанавливает счётчик; кнопка «Установить» фиксирует значение в истории.</p>
+        <CounterTask />
+      </div>
+
+      <div className="task">
+        <h2>Задание 3: История изменений</h2>
+        <p style={{ color: '#495057' }}>Каждое изменение записывается в массив и отображается под счётчиком.</p>
+        <CounterTask />
+      </div>
+
+      <div className="task">
+        <h2>Задание 4: Счётчик с настройкой шага</h2>
+        <p style={{ color: '#495057' }}>Кнопки «+Шаг» и «−Шаг» меняют величину шага; «Шаг ×10» задаёт шаг 10.</p>
+        <CounterTask />
+      </div>
+
+      <div className="task">
+        <h2>Задание 5: Визуализация счётчика (0–20)</h2>
+        <p style={{ color: '#495057' }}>Прогресс-бар от 0 до 20; при достижении максимума кнопка «+1» блокируется.</p>
+        <CounterWithLimits max={20} />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

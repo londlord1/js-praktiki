@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР21 — Имитация работы с API Госуслуг</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+
+.widget{background:linear-gradient(180deg,#0047ab,#003380);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px}
+.widget .status{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:13px}
+.panel{background:#f8f9fc;border:1px solid #e3e7f0;border-radius:10px;padding:16px;margin-top:12px}
+.badge{display:inline-block;background:#e8f5e9;color:#2e7d32;border-radius:12px;padding:2px 10px;font-size:12px;margin-left:8px}
+.badge-red{background:#ffe0e0;color:#c62828}
+.notif{background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px;margin-top:10px;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР21 — Имитация работы с API Госуслуг</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: демо-виджет Госуслуг + 7 доработок (новая услуга, статус заявок, отправка заявления, вход по СНИЛС, личный кабинет, оповещения, встраиваемый виджет).</div>
+
+<section class="card">
+  <h2>Демо-виджет Госуслуг со всеми доработками (1–7)</h2>
+
+  <div class="widget">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>🏛️ Госуслуги — демо-виджет</strong>
+      <span class="status" id="widgetStatus">🟡 Требуется вход</span>
+    </div>
+    <div class="hint" style="color:#cfe0ff">Виджет встроенного типа (зад. 7): его можно «скопировать» на любой сайт — это данный блок.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:20px">
+    <div style="flex:1;min-width:260px">
+      <h3>🔐 Авторизация через ЕСИА</h3>
+      <div class="fg">
+        <input type="text" id="authLogin" placeholder="Логин (user123)" value="user123">
+      </div>
+      <div class="fg">
+        <input type="password" id="authPassword" placeholder="Пароль (password)" value="password">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="snilsMode">
+        <label for="snilsMode">Вход по СНИЛС (зад. 4)</label>
+      </div>
+      <div class="fg" id="snilsField" style="display:none">
+        <input type="text" id="authSnils" placeholder="СНИЛС (123-456-789 00)" value="123-456-789 00">
+      </div>
+      <button class="success" id="authBtn">Войти через Госуслуги</button>
+      <div class="hint" id="authStatus">Статус: не авторизован</div>
+    </div>
+
+    <div style="flex:2;min-width:300px">
+      <h3>📚 Доступные услуги (зад. 1: добавлена «Запись к врачу»)</h3>
+      <div id="serviceList"></div>
+      <div class="panel" id="serviceDetail">
+        <p style="color:#99a">Выберите услугу для просмотра деталей и подачи заявления (зад. 2, 3).</p>
+      </div>
+      <button class="success" id="applyBtn" style="display:none">📝 Подать заявление (зад. 3)</button>
+    </div>
+  </div>
+
+  <div class="notif" id="notifications">
+    <strong>🔔 Оповещения (зад. 6):</strong>
+    <span id="notifList">новых уведомлений нет. Войдите и подайте заявление.</span>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+    <button id="cabinetBtn">👤 Личный кабинет (зад. 5)</button>
+    <button class="danger" id="logoutBtn" style="display:none">Выйти</button>
+  </div>
+  <div class="panel" id="cabinet" style="display:none"></div>
+
+  <div class="output" id="apiOut">API-ответы появятся здесь. Авторизуйтесь (логин user123 / password, или включите вход по СНИЛС).</div>
+</section>
+
+<section class="card">
+  <h2>Фрагмент для встраивания (зад. 7)</h2>
+  <p>Реальный виджет ПОС выглядит так. Для имитации встраиваемости этот блок можно «перенести» на другую страницу — код самодостаточен.</p>
+  <pre class="output" style="min-height:0">Widget("https://pos.gosuslugi.ru/form", 12345) ← ID организации из ЦУР</pre>
+</section>
+
+<script>
+// ===== Базы данных =====
+const userDB = {
+  varchar: null,
+  'user123': {
+    id: 'user123', name: 'Иван Иванов', phone: '+7 999 999-99-99',
+    email: 'ivan@example.com', snils: '123-456-789 00',
+    passport: '45 12 345678', registered: 'г. Москва, ул. Тверская, 10'
+  }
+};
+const servicesDB = {
+  passport: { name: 'Загранпаспорт', desc: 'Оформление загранпаспорта', price: '5000 ₽', terms: 'до 30 дней' },
+  tax: { name: 'Налоговая задолженность', desc: 'Проверка и оплата', debt: '0 ₽', last_payment: '15.01.2026' },
+  fines: { name: 'Штрафы ГИБДД', desc: 'Проверка штрафов', count: 0, total: '0 ₽' },
+  pfr: { name: 'Пенсионные накопления', desc: 'Состояние счёта', balance: '1 245 678.90 ₽' },
+  doctor: { name: 'Запись к врачу', desc: 'Электронная регистратура', clinics: ['Поликлиника №1', 'Поликлиника №2'], free_slots: 15 }
+};
+let historyDB = [
+  { id: 1, service: 'Загранпаспорт', date: '2025-02-10', status: 'завершено' },
+  { id: 2, service: 'Налоговая задолженность', date: '2025-01-15', status: 'в обработке' }
+];
+
+let isAuth = false;
+let currentUser = null;
+let activeService = null;
+let notifications = [];
+
+const $ = (id) => document.getElementById(id);
+const apiOut = $('apiOut');
+function log(msg, isErr) {
+  const line = (isErr ? '❌ ' : '✅ ') + msg;
+  apiOut.textContent += (apiOut.textContent ? '\n' : '') + line;
+}
+
+function renderServices() {
+  const list = $('serviceList');
+  list.innerHTML = '';
+  for (const key of Object.keys(servicesDB)) {
+    const s = servicesDB[key];
+    const div = document.createElement('div');
+    div.className = 'service-item';
+    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid #e3e7f0;margin-bottom:6px';
+    div.innerHTML = '<span>' + s.name + '</span><span class="badge">доступно</span>';
+    div.addEventListener('click', () => selectService(key));
+    list.appendChild(div);
+  }
+}
+
+function selectService(key) {
+  if (!isAuth) { log('Для просмотра услуг авторизуйтесь через ЕСИА', true); return; }
+  activeService = key;
+  const s = servicesDB[key];
+  let html = '<h3 style="margin-top:0">' + s.name + '</h3><p>' + s.desc + '</p>';
+
+  // зад. 2: статус заявки из истории
+  const related = historyDB.find(h => h.service === s.name);
+  html += '<p><b>Статус заявки:</b> ' + (related ? '<span class="badge badge-red">' + related.status + '</span>' : '<span class="badge">заявок нет</span>') + ' (зад. 2)</p>';
+
+  for (const [k, v] of Object.entries(s)) {
+    if (['name', 'desc'].includes(k)) continue;
+    html += '<p><i>' + k + ':</i> ' + (Array.isArray(v) ? v.join(', ') : v) + '</p>';
+  }
+  $('serviceDetail').innerHTML = html;
+  $('applyBtn').style.display = 'inline-block';
+  log('Услуга выбрана: ' + s.name);
+}
+
+// ===== зад. 3: отправка заявления =====
+function submitApplication() {
+  if (!isAuth) { log('Необходима авторизация', true); return; }
+  if (!activeService) return;
+  const s = servicesDB[activeService];
+  const entry = { id: Date.now(), service: s.name, date: new Date().toLocaleDateString('ru-RU'), status: 'подано' };
+  historyDB.unshift(entry);
+  notifications.unshift('✅ Заявление по услуге «' + s.name + '» подано (' + entry.date + ')');
+  renderNotifs();
+  log('✅ Заявление подано: ' + s.name);
+  renderCabinet();
+}
+$('applyBtn').addEventListener('click', submitApplication);
+
+// ===== зад. 6: оповещения =====
+function renderNotifs() {
+  const listEl = $('notifList');
+  if (notifications.length === 0) {
+    listEl.textContent = 'новых уведомлений нет.';
+    $('notifications').style.borderColor = '#ffe082';
+  } else {
+    listEl.textContent = '';
+    notifications.forEach((n, i) => {
+      const span = document.createElement('span');
+      span.textContent = n + (i === 0 ? ' (новое!)' : '');
+      span.style.display = 'block';
+      listEl.appendChild(span);
+    });
+  }
+}
+
+// ===== авторизация (зад. 4: по СНИЛС) =====
+$('snilsMode').addEventListener('change', function() {
+  $('snilsField').style.display = this.checked ? 'block' : 'none';
+});
+function doAuth() {
+  if (isAuth) { doLogout(); return; }
+  const bySnils = $('snilsMode').checked;
+  let ok = false;
+  if (bySnils) {
+    const s = $('authSnils').value.trim();
+    ok = s === '123-456-789 00';
+  } else {
+    const login = $('authLogin').value.trim();
+    const pass = $('authPassword').value.trim();
+    ok = login === 'user123' && pass === 'password';
+  }
+  if (!ok) {
+    log('Неверные данные ' + (bySnils ? 'СНИЛС' : 'для входа'), true);
+    $('authStatus').textContent = 'Статус: ошибка авторизации';
+    return;
+  }
+  isAuth = true;
+  currentUser = userDB['user123'];
+  $('authStatus').innerHTML = '✅ Авторизован как <b>' + currentUser.name + '</b>' + (bySnils ? ' (по СНИЛС, зад. 4)' : '');
+  $('widgetStatus').textContent = '🟢 Авторизован';
+  $('authBtn').textContent = 'Выйти из Госуслуг';
+  $('logoutBtn').style.display = 'inline-block';
+  notifications.unshift('🔐 Вы вошли в систему (' + new Date().toLocaleTimeString() + ')');
+  renderNotifs();
+  log('Авторизация успешна. Получены услуги: ' + Object.keys(servicesDB).length);
+  renderServices();
+}
+function doLogout() {
+  isAuth = false; currentUser = null; activeService = null;
+  $('authStatus').textContent = 'Статус: не авторизован';
+  $('widgetStatus').textContent = '🟡 Требуется вход';
+  $('authBtn').textContent = 'Войти через Госуслуги';
+  $('logoutBtn').style.display = 'none';
+  $('cabinet').style.display = 'none';
+  notifications.unshift('🔓 Вы вышли из системы');
+  renderNotifs();
+  log('Выход выполнен');
+}
+$('authBtn').addEventListener('click', doAuth);
+$('logoutBtn').addEventListener('click', doLogout);
+
+// ===== зад. 5: личный кабинет =====
+function renderCabinet() {
+  if (!currentUser) return;
+  const c = $('cabinet');
+  c.style.display = 'block';
+  let html = '<h3 style="margin-top:0">👤 Личный кабинет: ' + currentUser.name + '</h3>';
+  html += '<p>Телефон: ' + currentUser.phone + '</p>';
+  html += '<p>Email: ' + currentUser.email + '</p>';
+  html += '<p>СНИЛС: ' + currentUser.snils + '</p>';
+  html += '<p>Паспорт: ' + currentUser.passport + '</p>';
+  html += '<h4>История обращений (зад. 5):</h4><ul>';
+  historyDB.forEach(h => { html += '<li>' + h.service + ' — ' + h.date + ' — ' + h.status + '</li>'; });
+  html += '</ul>';
+  c.innerHTML = html;
+}
+$('cabinetBtn').addEventListener('click', () => {
+  if (!isAuth) { log('Сначала авторизуйтесь', true); return; }
+  renderCabinet();
+  log('Личный кабинет открыт (зад. 5)');
+});
+
+renderServices();
+renderNotifs();
+</script>
+</body>
+</html>

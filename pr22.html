@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР22 — Основы классов. Создание модели данных</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР22 — Основы классов. Создание модели данных</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: класс Book и LibraryManager, расширенные методами заданий 1–4.</div>
+
+<section class="card">
+  <h2>Демо: модель данных библиотеки (классы Book / LibraryManager)</h2>
+
+  <div class="row">
+    <label>Добавить книгу:</label>
+    <input type="text" id="title" placeholder="Название">
+    <input type="text" id="author" placeholder="Автор">
+    <input type="number" id="year" placeholder="Год" value="1900">
+    <input type="number" id="rating" placeholder="Рейтинг 0-5" value="4" step="0.1">
+    <button class="success" id="addBtn">Добавить</button>
+  </div>
+  <div class="hint">Книги добавляются в общую библиотеку для проверки всех заданий (isOld, диапазон лет, средний рейтинг, сортировка).</div>
+
+  <div class="row">
+    <button id="showAllBtn">Показать все</button>
+    <button id="oldBtn">Зад. 1: старые (старше 100 лет)</button>
+    <button id="avgBtn">Зад. 3: средний рейтинг</button>
+    <button id="sortBtn">Зад. 4: по году (новые → старые)</button>
+  </div>
+  <div class="row">
+    <label>Зад. 2: диапазон лет</label>
+    <input type="number" id="fromY" value="1850" style="width:90px">
+    <span>–</span>
+    <input type="number" id="toY" value="1950" style="width:90px">
+    <button id="rangeBtn">Найти по диапазону</button>
+  </div>
+
+  <div class="output" id="out">Добавляйте книги, чтобы увидеть результаты заданий 1–4.</div>
+</section>
+
+<script>
+// ===== Класс Book (из основной практики + доработка зад. 1) =====
+class Book {
+  #id;
+  constructor(title, author, year, genre = 'Не указан') {
+    this.#id = Date.now() + Math.random();
+    this.title = title;
+    this.author = author;
+    this.year = year;
+    this.genre = genre;
+    this.isAvailable = true;
+    this._rating = 0;
+  }
+  getId() { return this.#id; }
+  get age() { return new Date().getFullYear() - this.year; }
+  set rating(v) {
+    if (v < 0 || v > 5) throw new Error('Рейтинг должен быть от 0 до 5');
+    this._rating = v;
+  }
+  get rating() { return this._rating || 0; }
+  // ЗАДАНИЕ 1: isOld()
+  isOld() { return this.age > 100; }
+  toggleAvailability() { this.isAvailable = !this.isAvailable; }
+  getInfo() {
+    const s = this.isAvailable ? '✅ Доступна' : '❌ Выдана';
+    return `"${this.title}" — ${this.author} (${this.year}), ${s}, рейтинг ${this.rating}`;
+  }
+}
+
+// ===== Класс LibraryManager =====
+class LibraryManager {
+  constructor() { this.books = []; }
+  addBook(title, author, year, rating) {
+    if (!title || !author || !year) throw new Error('Название, автор и год обязательны');
+    const b = new Book(title, author, year);
+    if (rating !== '' && rating !== undefined) b.rating = rating;
+    this.books.push(b);
+    return b;
+  }
+  getAllBooks() { return this.books; }
+  // ЗАДАНИЕ 2: getBooksByYearRange
+  getBooksByYearRange(fromYear, toYear) {
+    return this.books.filter(b => b.year >= fromYear && b.year <= toYear);
+  }
+  // ЗАДАНИЕ 3: getAverageRating
+  getAverageRating() {
+    if (this.books.length === 0) return 0;
+    const sum = this.books.reduce((acc, b) => acc + b.rating, 0);
+    return Number((sum / this.books.length).toFixed(2));
+  }
+}
+
+const library = new LibraryManager();
+// стартовые книги для наглядности заданий
+library.addBook('Война и мир', 'Лев Толстой', 1869, 4.8);
+library.addBook('Преступление и наказание', 'Фёдор Достоевский', 1866, 4.9);
+library.addBook('1984', 'Джордж Оруэлл', 1949, 4.5);
+library.addBook('Мастер и Маргарита', 'М. Булгаков', 1967, 5);
+library.addBook('Дюна', 'Фрэнк Герберт', 1965, 4.2);
+
+const out = document.getElementById('out');
+
+function showBooks(books, label) {
+  if (!books || books.length === 0) { out.textContent = label + '\n(книг нет)'; return; }
+  out.textContent = label + '\n' + books.map(b => b.getInfo()).join('\n');
+}
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  const t = document.getElementById('title').value.trim();
+  const a = document.getElementById('author').value.trim();
+  const y = parseInt(document.getElementById('year').value, 10);
+  const r = document.getElementById('rating').value;
+  if (!t || !a || isNaN(y)) { out.textContent = 'Заполните название, автора и год.'; return; }
+  try {
+    library.addBook(t, a, y, r);
+    out.textContent = 'Книга добавлена: "' + t + '"';
+  } catch (e) {
+    out.textContent = '❌ ' + e.message;
+  }
+});
+
+document.getElementById('showAllBtn').addEventListener('click', () =>
+  showBooks(library.getAllBooks(), 'Все книги (' + library.getAllBooks().length + '):'));
+
+// зад. 1
+document.getElementById('oldBtn').addEventListener('click', () =>
+  showBooks(library.getBooksByYearRange() ? library.books.filter(b => b.isOld()) : [], 'Старые книги (старше 100 лет) по isOld():'));
+
+// зад. 3
+document.getElementById('avgBtn').addEventListener('click', () =>
+  out.textContent = 'Средний рейтинг всех книг: ' + library.getAverageRating() + ' (зад. 3)');
+
+// зад. 2
+document.getElementById('rangeBtn').addEventListener('click', () => {
+  const f = parseInt(document.getElementById('fromY').value, 10);
+  const t = parseInt(document.getElementById('toY').value, 10);
+  showBooks(library.getBooksByYearRange(f, t), 'Книги в диапазоне ' + f + '–' + t + ' (зад. 2):');
+});
+
+// зад. 4
+document.getElementById('sortBtn').addEventListener('click', () => {
+  const sorted = [...library.getAllBooks()].sort((a, b) => b.year - a.year);
+  out.textContent = 'Книги по году выпуска (новые → старые), зад. 4:\n' +
+    sorted.map(b => `${b.year}: ${b.title}`).join('\n');
+});
+
+// вывод стартового состояния
+showBooks(library.getAllBooks(), 'Библиотека готова. Стартовые книги:');
+</script>
+</body>
+</html>

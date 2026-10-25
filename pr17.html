@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР17 — Инкапсуляция. Создание приватных переменных</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР17 — Инкапсуляция. Создание приватных переменных</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: счетчик с границами через замыкание.</div>
+
+<section class="card">
+  <h2>Задание 1: Ограниченный счетчик (createBoundedCounter)</h2>
+  <p>Модифицируйте фабричную функцию так, чтобы она принимала <code>min</code> и <code>max</code> и работала в заданном диапазоне. Начальное значение — <code>min</code>. Если при <code>increment()</code> достигается максимум (или при <code>decrement()</code> минимум) — действие блокируется с предупреждением. Добавьте <code>getRange()</code>, возвращающий <code>{ min, max, current }</code>.</p>
+  <div class="hint">Контрольные точки: счетчик не выходит за пределы; при min ≥ max выбрасывается ошибка; reset() сбрасывает к min.</div>
+
+  <div class="row">
+    <label>min</label>
+    <input type="number" id="minVal" value="0">
+    <label>max</label>
+    <input type="number" id="maxVal" value="5">
+    <button class="success" id="createBtn">Создать счетчик</button>
+  </div>
+
+  <div class="row">
+    <button id="incBtn">+1 (increment)</button>
+    <button id="decBtn">−1 (decrement)</button>
+    <button id="rndBtn1">Сброс (reset)</button>
+    <button id="rangeBtn">Показать getRange()</button>
+    <button id="probeBtn" class="danger">Попытка прямого доступа к count</button>
+  </div>
+  <div class="row">
+    <label>Проверка ошибки (min ≥ max):</label>
+    <input type="number" id="errMin" value="5">
+    <input type="number" id="errMax" value="0">
+    <button id="errBtn" class="danger">Создать с ошибкой</button>
+  </div>
+
+  <div class="output" id="out1">Создайте счетчик, чтобы начать.</div>
+</section>
+
+<script>
+const out1 = document.getElementById('out1');
+let counter = null;
+const log1 = (t) => { out1.textContent += t + '\n'; };
+
+function createBoundedCounter(min, max) {
+  if (min >= max) {
+    throw new Error(`Ошибка: min (${min}) должен быть меньше max (${max})`);
+  }
+  let count = min;
+
+  function warn(msg) {
+    log1('⚠ ' + msg);
+  }
+
+  return {
+    increment() {
+      if (count >= max) {
+        warn(`Достигнут максимум: ${max}`);
+      } else {
+        count++;
+        log1(`increment() → ${count}`);
+      }
+      return this;
+    },
+    decrement() {
+      if (count <= min) {
+        warn(`Достигнут минимум: ${min}`);
+      } else {
+        count--;
+        log1(`decrement() → ${count}`);
+      }
+      return this;
+    },
+    getValue() {
+      return count;
+    },
+    reset() {
+      count = min;
+      log1(`reset() → ${count} (сброшено к min)`);
+      return this;
+    },
+    getRange() {
+      const r = { min, max, current: count };
+      log1('getRange() → ' + JSON.stringify(r));
+      return r;
+    }
+  };
+}
+
+document.getElementById('createBtn').addEventListener('click', () => {
+  const min = parseInt(document.getElementById('minVal').value, 10);
+  const max = parseInt(document.getElementById('maxVal').value, 10);
+  if (isNaN(min) || isNaN(max)) { log1('Заполните поля числами.'); return; }
+  try {
+    counter = createBoundedCounter(min, max);
+    out1.textContent = `Счетчик создан: min=${min}, max=${max}, current=${counter.getValue()}\n`;
+  } catch (e) {
+    log1('❌ ' + e.message);
+  }
+});
+
+document.getElementById('incBtn').addEventListener('click', () => { counter && counter.increment(); });
+document.getElementById('decBtn').addEventListener('click', () => { counter && counter.decrement(); });
+document.getElementById('rndBtn1').addEventListener('click', () => { counter && counter.reset(); });
+document.getElementById('rangeBtn').addEventListener('click', () => { counter && counter.getRange(); });
+document.getElementById('probeBtn').addEventListener('click', () => {
+  if (!counter) return;
+  log1('counter.count = ' + counter.count + ' (undefined = доступ скрыт, есть только getValue)');
+});
+
+document.getElementById('errBtn').addEventListener('click', () => {
+  const min = parseInt(document.getElementById('errMin').value, 10);
+  const max = parseInt(document.getElementById('errMax').value, 10);
+  try {
+    createBoundedCounter(min, max);
+    log1('Страно, ошибка не сработала.');
+  } catch (e) {
+    log1('❌ ' + e.message);
+  }
+});
+</script>
+</body>
+</html>

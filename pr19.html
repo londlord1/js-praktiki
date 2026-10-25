@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР19 — Чат-бот</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.chatbox{background:#f8f9fa;border:1px solid #e3e7f0;border-radius:12px;padding:14px;max-height:320px;overflow-y:auto;font-size:14px;margin-top:8px}
+.msg{margin:6px 0;padding:8px 12px;border-radius:12px;max-width:85%;white-space:pre-wrap}
+.msg.user{align-self:flex-end;background:#3b5bdb;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.msg.bot{background:#fff;color:#222;border:1px solid #e3e7f0;border-bottom-left-radius:4px}
+.msginfo{font-size:11px;color:#999;margin-top:3px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР19 — Чат-бот</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: расширения простого чат-бота.</div>
+
+<section class="card">
+  <h2>Общее задание: полный бот со всеми доработками (1–7)</h2>
+  <p>Здесь собран чат-бот, в который внедрены все самостоятельные задания: новая команда, поздравление с днём рождения, счётчик сообщений, обработка целых фраз, режим &laquo;Калькулятор&raquo;, сохранение истории в localStorage и переключатель языка.</p>
+
+  <div class="row">
+    <label>Язык (зад. 7):</label>
+    <select id="langSelect">
+      <option value="ru">Русский</option>
+      <option value="en">English</option>
+    </select>
+    <button class="danger" id="clearHistoryBtn">Очистить историю (localStorage)</button>
+  </div>
+
+  <div class="chatbox" id="chatbox"></div>
+
+  <div class="row">
+    <input type="text" id="chatInput" placeholder="Введите сообщение..." style="flex:1;min-width:220px">
+    <button class="success" id="sendBtn">Отправить</button>
+  </div>
+  <div class="hint">
+    Попробуйте: <b>привет</b>, <b>как тебя зовут?</b>, <b>с днём рождения</b>, <b>2+2</b>, <b>5*3</b>, <b>имя</b> (RU), <b>hello</b>, <b>what is your name</b> (EN).
+  </div>
+  <div class="output" id="botLog">Лог бота (счётчик сообщений, диагностика).</div>
+</section>
+
+<script>
+// ============ СЛОВАРИ (зад. 7: язык) ============
+const botResponses = {
+  ru: {
+    'привет': ['Привет! Как у тебя дела? 😊', 'Здравствуй! Рад тебя видеть! 👋'],
+    'как дела': ['У меня всё отлично! А у тебя? 😊', 'Прекрасно! Спасибо, что спросил! 🌟'],
+    'как тебя зовут': ['Меня зовут Бот-помощник! 🤖', 'Я твой виртуальный друг! Называй меня просто Бот! 😊'],
+    'кто ты': ['Я простой чат-бот, созданный для общения! 🤖'],
+    'имя': ['Меня зовут Бот! А тебя? 😊 (зад. 1)', 'Я безымянный бот! Можешь придумать мне имя! 🤖 (зад. 1)'],
+    'день рождения': ['С днём рождения! 🎉🎂🎁 (зад. 2)', 'Поздравляю! Желаю счастья и здоровья! 🌟 (зад. 2)'],
+    'погода': ['К сожалению, я не знаю погоду. Но выгляни в окно! 🌤️'],
+    'спасибо': ['Пожалуйста! Рад помочь! 😊', 'Всегда пожалуйста! 🌟'],
+    'пока': ['Пока! Рад был пообщаться! 👋', 'До встречи! Приходи ещё! 😊'],
+    'помощь': ['Я умею: привет, как дела, как тебя зовут, имя, день рождения, калькулятор (например 2+2).']
+  },
+  en: {
+    'hello': ['Hello! How are you? 😊', 'Hi there! 👋'],
+    'how are you': ['I am fine! And you? 😊', 'Great, thanks for asking! 🌟'],
+    'what is your name': ['My name is Bot! 🤖', 'Call me Bot! 😊'],
+    'name': ['I am Bot! What is your name? 😊 (task 1)'],
+    'birthday': ['Happy birthday! 🎉🎂🎁 (task 2)'],
+    'weather': ['I do not know the weather. Look out of the window! 🌤️'],
+    'thank': ['You are welcome! 😊', 'Anytime! 🌟'],
+    'bye': ['Goodbye! 👋', 'See you soon! 😊'],
+    'help': ['I can: hello, how are you, what is your name, name, birthday, calculator (try 2+2).']
+  }
+};
+const defaultResponses = {
+  ru: ['Интересно... Расскажи ещё! 😊', 'Я не совсем понял. Попробуй сказать по-другому! 🤔', 'Хм... Давай поговорим о чём-то другом? 😊'],
+  en: ['Interesting... tell me more! 😊', 'I did not understand. Try again! 🤔', 'Hmm... let us talk about something else? 😊']
+};
+
+let currentLanguage = 'ru';
+let messageCount = 0; // зад. 3
+
+// ============ DOM ============
+const chatbox = document.getElementById('chatbox');
+const chatInput = document.getElementById('chatInput');
+const botLog = document.getElementById('botLog');
+
+function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function getBotResponse(userMessage) {
+  const lang = currentLanguage;
+  const msg = userMessage.toLowerCase().trim();
+  const dict = botResponses[lang];
+
+  // зад. 5: калькулятор
+  if (/^[-+*\/\d\s.()]*\d[\s]*[-+*\/][\s]*\d/.test(msg) && /[+\-*/]/.test(msg.replace(/[^+\-*/]/g, ''))) {
+    const expr = msg.replace(/[^0-9+\-*/().\s]/g, '');
+    if (expr) {
+      try {
+        const result = Function('"use strict"; return (' + expr + ')')();
+        if (typeof result === 'number' && isFinite(result)) {
+          return 'Результат: ' + (+result.toFixed(6)) + ' 🧮 (зад. 5)';
+        }
+      } catch (e) {}
+    }
+    return 'Не могу вычислить это выражение. Попробуй что-то проще! 🤔 (зад. 5)';
+  }
+
+  // поиск ключевых слов
+  for (const keyword of Object.keys(dict)) {
+    if (msg.includes(keyword)) {
+      return getRandomItem(dict[keyword]);
+    }
+  }
+  return getRandomItem(defaultResponses[lang]);
+}
+
+function getCurrentTime() {
+  return new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function addMessage(text, sender) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + sender;
+  div.textContent = text;
+  const info = document.createElement('div');
+  info.className = 'msginfo';
+  info.textContent = getCurrentTime() + (sender === 'user' ? '' : ' • бот');
+  div.appendChild(document.createElement('br'));
+  div.appendChild(info);
+  chatbox.appendChild(div);
+  chatbox.scrollTop = chatbox.scrollHeight;
+  saveHistory(); // зад. 6
+}
+
+// ============ зад. 6: localStorage ============
+function saveHistory() {
+  const messages = [];
+  chatbox.querySelectorAll('.msg').forEach(el => {
+    messages.push({ text: el.firstChild.textContent, sender: el.classList.contains('user') ? 'user' : 'bot' });
+  });
+  localStorage.setItem('chatHistory', JSON.stringify(messages));
+}
+function loadHistory() {
+  const saved = localStorage.getItem('chatHistory');
+  if (saved) {
+    try {
+      const messages = JSON.parse(saved);
+      chatbox.innerHTML = '';
+      messages.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg ' + (m.sender === 'user' ? 'user' : 'bot');
+        div.textContent = m.text;
+        const info = document.createElement('div');
+        info.className = 'msginfo';
+        info.textContent = 'восстановлено';
+        div.appendChild(document.createElement('br'));
+        div.appendChild(info);
+        chatbox.appendChild(div);
+      });
+      chatbox.scrollTop = chatbox.scrollHeight;
+    } catch (e) {}
+  }
+}
+
+function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  messageCount++; // зад. 3
+  botLog.textContent = 'Сообщение #' + messageCount + ' (' + currentLanguage.toUpperCase() + '): "' + text + '"';
+
+  addMessage(text, 'user');
+  chatInput.value = '';
+
+  // имитация печати с задержкой
+  setTimeout(() => {
+    let response = getBotResponse(text);
+    response += `  (Сообщение #${messageCount})`; // зад. 3: счётчик в конце ответа
+    addMessage(response, 'bot');
+    botLog.textContent += '\nБот ответил (#из сообщения: ' + messageCount + ')';
+  }, 500 + Math.random() * 500);
+}
+
+// ============ обработчики ============
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+
+// зад. 7: язык
+document.getElementById('langSelect').addEventListener('change', function() {
+  currentLanguage = this.value;
+  addMessage('Язык переключён на ' + (currentLanguage === 'ru' ? 'русский 🇷🇺' : 'английский 🇬🇧') + ' (зад. 7)', 'bot');
+});
+
+document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+  localStorage.removeItem('chatHistory');
+  chatbox.innerHTML = '';
+  botLog.textContent = 'История очищена.';
+  addMessage('Привет! Я бот со всеми доработками (зад. 1–7).', 'bot');
+});
+
+// ============ инициализация ============
+loadHistory();
+</script>
+</body>
+</html>

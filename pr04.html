@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР04 — Использование функций для решения базовых задач</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР04 — Использование функций для решения базовых задач</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения</p>
+
+    <section class="card">
+        <h2>Задание 1: Свой простые функции</h2>
+        <p class="hint">multiply(a, b) — умножение; isEven(n) — проверка чётности; getFullName(f, l) — полное имя.</p>
+        <div class="row">
+            <input type="number" id="pr04-mult-a" placeholder="Число A" style="width:90px" value="6">
+            <input type="number" id="pr04-mult-b" placeholder="Число B" style="width:90px" value="7">
+            <button onclick="runMultiply()">multiply</button>
+            <input type="number" id="pr04-even" placeholder="Число" style="width:90px" value="10">
+            <button onclick="runIsEven()">isEven</button>
+            <input type="text" id="pr04-first" placeholder="Имя" style="width:120px" value="Анна">
+            <input type="text" id="pr04-last" placeholder="Фамилия" style="width:120px" value="Смирнова">
+            <button onclick="runGetFullName()">getFullName</button>
+        </div>
+        <div class="output" id="pr04-func-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 2: Функции для работы с массивами</h2>
+        <p class="hint">getEvenNumbers, getAverage, reverseArray. Массив: [12, 7, 23, 45, 18, 31, 6, 42, 19, 8]</p>
+        <div class="row">
+            <input type="text" id="pr04-arr-input" placeholder="Массив через запятую" style="width:260px" value="12, 7, 23, 45, 18, 31, 6, 42, 19, 8">
+            <button onclick="runGetEvenNumbers()">Чётные числа</button>
+            <button onclick="runGetAverage()">Среднее</button>
+            <button onclick="runReverseArray()">Перевернуть</button>
+        </div>
+        <div class="output" id="pr04-arr-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 3: Функции для работы с объектами</h2>
+        <p class="hint">Пользователи: Анна(25, Москва), Иван(30, СПб), Мария(22, Москва), Петр(35, Казань), Елена(28, Москва)</p>
+        <div class="row">
+            <select id="pr04-city-select">
+                <option value="Москва">Москва</option>
+                <option value="СПб">СПб</option>
+                <option value="Казань">Казань</option>
+            </select>
+            <button onclick="runGetUserNames()">Имена всех</button>
+            <button onclick="runGetUsersByCity()">По городу</button>
+            <button onclick="runGetOldestUser()">Самый старший</button>
+        </div>
+        <div class="output" id="pr04-obj-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 4: Практические задачи</h2>
+        <p class="hint">calculateDiscount, isPasswordValid, getWeatherDescription.</p>
+        <div class="row">
+            <input type="number" id="pr04-price" placeholder="Цена" style="width:110px" value="2000">
+            <input type="number" id="pr04-discount" placeholder="Скидка %" style="width:110px" value="20">
+            <button onclick="runCalculateDiscount()">Скидка</button>
+            <input type="text" id="pr04-password" placeholder="Пароль" style="width:150px" value="pass123">
+            <button onclick="runIsPasswordValid()">Проверить пароль</button>
+            <input type="number" id="pr04-temp" placeholder="°C" style="width:100px" value="15">
+            <button onclick="runGetWeatherDescription()">Описание погоды</button>
+        </div>
+        <div class="output" id="pr04-practice-output"></div>
+    </section>
+
+    <script>
+        function multiply(a, b) { return a * b; }
+        function isEven(n) { return n % 2 === 0; }
+        function getFullName(firstName, lastName) { return firstName + " " + lastName; }
+
+        function runMultiply() {
+            const a = parseFloat(document.getElementById('pr04-mult-a').value);
+            const b = parseFloat(document.getElementById('pr04-mult-b').value);
+            const out = document.getElementById('pr04-func-output');
+            if (isNaN(a) || isNaN(b)) { out.textContent = 'Введите корректные числа.'; return; }
+            out.textContent = 'multiply(' + a + ', ' + b + ') = ' + multiply(a, b);
+        }
+
+        function runIsEven() {
+            const n = parseFloat(document.getElementById('pr04-even').value);
+            const out = document.getElementById('pr04-func-output');
+            if (isNaN(n)) { out.textContent = 'Введите корректное число.'; return; }
+            out.textContent = 'isEven(' + n + ') = ' + isEven(n) + ' → число ' + (isEven(n) ? 'чётное' : 'нечётное');
+        }
+
+        function runGetFullName() {
+            const f = document.getElementById('pr04-first').value.trim();
+            const l = document.getElementById('pr04-last').value.trim();
+            const out = document.getElementById('pr04-func-output');
+            if (!f || !l) { out.textContent = 'Введите имя и фамилию.'; return; }
+            out.textContent = 'getFullName("' + f + '", "' + l + '") = "' + getFullName(f, l) + '"';
+        }
+
+        function parseArr(str) {
+            return str.split(',').map(s => s.trim()).filter(s => s !== '');
+        }
+
+        function getEvenNumbers(arr) {
+            let result = [];
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] % 2 === 0) result.push(arr[i]);
+            }
+            return result;
+        }
+
+        function getAverage(arr) {
+            let sum = 0;
+            for (let i = 0; i < arr.length; i++) sum += arr[i];
+            return arr.length ? sum / arr.length : 0;
+        }
+
+        function reverseArray(arr) {
+            let result = [];
+            for (let i = arr.length - 1; i >= 0; i--) result.push(arr[i]);
+            return result;
+        }
+
+        function getArrFromInput() {
+            const raw = document.getElementById('pr04-arr-input').value;
+            return parseArr(raw).map(Number);
+        }
+
+        function runGetEvenNumbers() {
+            const out = document.getElementById('pr04-arr-output');
+            const arr = getArrFromInput();
+            if (arr.some(isNaN)) { out.textContent = 'Введите корректные числа через запятую.'; return; }
+            out.textContent = 'Массив: [' + arr.join(', ') + ']\nЧётные числа: [' + getEvenNumbers(arr).join(', ') + ']';
+        }
+
+        function runGetAverage() {
+            const out = document.getElementById('pr04-arr-output');
+            const arr = getArrFromInput();
+            if (arr.some(isNaN)) { out.textContent = 'Введите корректные числа через запятую.'; return; }
+            out.textContent = 'Массив: [' + arr.join(', ') + ']\nСреднее арифметическое: ' + (Math.round(getAverage(arr) * 100) / 100);
+        }
+
+        function runReverseArray() {
+            const out = document.getElementById('pr04-arr-output');
+            const arr = getArrFromInput();
+            if (arr.some(isNaN)) { out.textContent = 'Введите корректные числа через запятую.'; return; }
+            out.textContent = 'Массив: [' + arr.join(', ') + ']\nОбратный порядок: [' + reverseArray(arr).join(', ') + ']';
+        }
+
+        const users = [
+            { name: "Анна", age: 25, city: "Москва" },
+            { name: "Иван", age: 30, city: "СПб" },
+            { name: "Мария", age: 22, city: "Москва" },
+            { name: "Петр", age: 35, city: "Казань" },
+            { name: "Елена", age: 28, city: "Москва" }
+        ];
+
+        function getUserNames(arr) {
+            let names = [];
+            for (let i = 0; i < arr.length; i++) names.push(arr[i].name);
+            return names;
+        }
+
+        function getUsersByCity(arr, city) {
+            return arr.filter(u => u.city === city);
+        }
+
+        function getOldestUser(arr) {
+            return arr.reduce((oldest, u) => (u.age > oldest.age ? u : oldest));
+        }
+
+        function runGetUserNames() {
+            const out = document.getElementById('pr04-obj-output');
+            out.textContent = 'Имена всех пользователей: [' + getUserNames(users).join(', ') + ']';
+        }
+
+        function runGetUsersByCity() {
+            const out = document.getElementById('pr04-obj-output');
+            const city = document.getElementById('pr04-city-select').value;
+            const found = getUsersByCity(users, city);
+            out.textContent = 'Пользователи из города "' + city + '" (' + found.length + '):\n\n' +
+                found.map(u => u.name + ' (' + u.age + ' лет)').join('\n');
+        }
+
+        function runGetOldestUser() {
+            const out = document.getElementById('pr04-obj-output');
+            const oldest = getOldestUser(users);
+            out.textContent = 'Самый старший пользователь:\n\n' + oldest.name + ', ' + oldest.age + ' лет, ' + oldest.city;
+        }
+
+        function calculateDiscount(price, discountPercent) {
+            let discount = price * discountPercent / 100;
+            return price - discount;
+        }
+
+        function isPasswordValid(password) {
+            return password.length >= 6;
+        }
+
+        function getWeatherDescription(temp) {
+            if (temp < 0) return "Холодно";
+            if (temp < 20) return "Прохладно";
+            if (temp < 30) return "Тепло";
+            return "Жарко";
+        }
+
+        function runCalculateDiscount() {
+            const out = document.getElementById('pr04-practice-output');
+            const price = parseFloat(document.getElementById('pr04-price').value);
+            const disc = parseFloat(document.getElementById('pr04-discount').value);
+            if (isNaN(price) || isNaN(disc)) { out.textContent = 'Введите цену и процент скидки.'; return; }
+            const result = calculateDiscount(price, disc);
+            out.textContent = 'Цена: ' + price + ' руб.\nСкидка: ' + disc + '%\nЦена со скидкой: ' + Math.round(result * 100) / 100 + ' руб.';
+        }
+
+        function runIsPasswordValid() {
+            const out = document.getElementById('pr04-practice-output');
+            const pwd = document.getElementById('pr04-password').value;
+            const valid = isPasswordValid(pwd);
+            out.textContent = 'Пароль: "' + pwd + '" (длина ' + pwd.length + ' символов)\n' +
+                'isPasswordValid → ' + valid + ' → пароль ' + (valid ? 'принят' : 'слишком короткий (нужно ≥ 6)');
+        }
+
+        function runGetWeatherDescription() {
+            const out = document.getElementById('pr04-practice-output');
+            const temp = parseFloat(document.getElementById('pr04-temp').value);
+            if (isNaN(temp)) { out.textContent = 'Введите температуру.'; return; }
+            out.textContent = 'Температура: ' + temp + '°C\nОписание: ' + getWeatherDescription(temp);
+        }
+    </script>
+</body>
+</html>

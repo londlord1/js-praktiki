@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР12 — Массивы и строки</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.hashtag-result{font-size:22px;font-weight:bold;color:#3b5bdb;word-break:break-all}
+.demo-btn{margin-top:6px}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР12 — Массивы и строки</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Применение методов строк и массивов: split, join, map, filter, charAt, slice, toUpperCase.</div>
+
+<section class="card">
+    <h2>Задание 1: Генератор хештегов</h2>
+    <p class="hint">Введите фразу. Программа очистит её, уберёт стоп-слова, капитализирует каждое слово и соберёт хештег. Методы: trim, split, filter, map, join, charAt, slice, toUpperCase.</p>
+    <div class="row">
+        <input type="text" id="inputPhrase" placeholder="Например: Лучшие практики JavaScript" style="flex:1;min-width:220px;">
+        <button class="success" id="generateBtn">⚙️ Сгенерировать</button>
+    </div>
+    <div class="hashtag-result" id="hashtagResult">—</div>
+    <div class="output" id="phraseOutput">Результат появится здесь.</div>
+    <button class="demo-btn" id="demo1Btn">🧪 Вставить: Привет мир</button>
+    <button class="demo-btn" id="demo2Btn">🧪 Вставить: в лесу родилась елочка</button>
+    <button class="demo-btn" id="demo3Btn">🧪 Вставить: ОЧЕНЬ длинная фраза для проверки ограничения длины</button>
+</section>
+
+<script>
+(function () {
+    const inputPhrase = document.getElementById('inputPhrase');
+    const generateBtn = document.getElementById('generateBtn');
+    const hashtagResult = document.getElementById('hashtagResult');
+    const phraseOutput = document.getElementById('phraseOutput');
+
+    const stopWords = ["в", "и", "на", "по", "с", "из", "от", "для", "не", "как"];
+
+    function generateHashtag() {
+        const rawInput = inputPhrase.value;
+
+        // Шаг 1: очистка и нижний регистр
+        const cleanedString = rawInput.trim().toLowerCase();
+
+        // Шаг 2: разбивка на слова, убираем пустые
+        const wordsArray = cleanedString.split(' ').filter(word => word.length > 0);
+
+        // Шаг 3: фильтрация стоп-слов
+        const meaningfulWords = wordsArray.filter(word => !stopWords.includes(word));
+
+        // Шаг 4: капитализация
+        const capitalizedWords = meaningfulWords.map(word => {
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        });
+
+        // Шаг 5: ошибка, если нет значимых слов
+        if (capitalizedWords.length === 0) {
+            hashtagResult.textContent = '—';
+            phraseOutput.textContent = '❌ Невозможно создать хештег. Слишком короткая фраза';
+            return;
+        }
+
+        // Шаг 6: сборка
+        const hashtag = '#' + capitalizedWords.join('');
+
+        hashtagResult.textContent = hashtag;
+
+        let message = '✅ Хештег: ' + hashtag;
+        if (hashtag.length > 20) {
+            message += '\n⚠️ Внимание: хештег слишком длинный! (длина ' + hashtag.length + ' символов, рекомендуемая — до 20)';
+        } else {
+            message += '\nДлина: ' + hashtag.length + ' символов.';
+        }
+        phraseOutput.textContent = message;
+    }
+
+    generateBtn.addEventListener('click', generateHashtag);
+    inputPhrase.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') generateHashtag();
+    });
+
+    document.getElementById('demo1Btn').addEventListener('click', function () {
+        inputPhrase.value = 'Привет мир';
+        generateHashtag();
+    });
+    document.getElementById('demo2Btn').addEventListener('click', function () {
+        inputPhrase.value = 'в лесу родилась елочка';
+        generateHashtag();
+    });
+    document.getElementById('demo3Btn').addEventListener('click', function () {
+        inputPhrase.value = 'ОЧЕНЬ длинная фраза для проверки ограничения длины';
+        generateHashtag();
+    });
+})();
+</script>
+</body>
+</html>

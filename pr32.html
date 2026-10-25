@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ПР32 — React: фильтрация и сортировка</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f0f2f5;color:#212529}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e0e0e0}
+  .topbar h1{margin:0;font-size:20px;color:#1c2333}
+  .topbar .back{color:#3b5bdb;text-decoration:none;font-size:14px;font-weight:600}
+  .wrap{max-width:820px;margin:24px auto;padding:0 16px}
+  .task{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:22px 24px;margin-bottom:22px}
+  .task h2{margin:0 0 14px;font-size:18px;color:#3b5bdb;border-bottom:2px solid #eef1f8;padding-bottom:10px}
+  input,select{padding:10px 12px;font-size:15px;border:2px solid #dfe2ea;border-radius:8px;outline:none}
+  input:focus,select:focus{border-color:#3b5bdb}
+  select{background:#fff;cursor:pointer}
+  button{padding:9px 15px;font-size:14px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{background:#c8ccd8;cursor:not-allowed}
+  .btn-green{background:#2f9e44}.btn-gray{background:#868e96}.btn-orange{background:#f08c00}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+  .stats{display:flex;justify-content:space-between;padding:10px 14px;background:#eef1f8;border-radius:8px;margin-bottom:12px;flex-wrap:wrap;gap:8px;font-size:14px}
+  ul.lst{list-style:none;padding:0;margin:0}
+  ul.lst li{background:#f8f9fc;border:1px solid #e6e9f2;border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+  .hl{background:#fff176;padding:0 2px;border-radius:2px}
+  .empty{text-align:center;color:#adb5bd;padding:24px;background:#f8f9fc;border-radius:8px}
+  .letters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+  .letters button{padding:5px 9px;font-size:13px;background:#eef1f8;color:#364fc7}
+  .letters button.on{background:#3b5bdb;color:#fff}
+  .checks{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:14px}
+  .checks label{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .checkRow{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+  .meta{font-size:12px;color:#999;float:right}
+  .itemGrad{background:linear-gradient(135deg,#a5b4fc,#93c5fd);border:none!important;color:#1e3a8a;font-weight:600;transition:all .3s}
+</style></head><body>
+<div class="topbar"><h1>ПР32 — React: фильтрация и сортировка</h1><a class="back" href="index.html">← Все работы</a></div>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const PEOPLE = [
+  { firstName: 'Анна', lastName: 'Иванова', age: 25, city: 'Москва' },
+  { firstName: 'Борис', lastName: 'Петров', age: 30, city: 'Санкт-Петербург' },
+  { firstName: 'Виктор', lastName: 'Сидоров', age: 41, city: 'Новосибирск' },
+  { firstName: 'Галина', lastName: 'Смирнова', age: 22, city: 'Екатеринбург' },
+  { firstName: 'Дмитрий', lastName: 'Кузнецов', age: 35, city: 'Казань' },
+  { firstName: 'Елена', lastName: 'Васильева', age: 28, city: 'Москва' },
+  { firstName: 'Иван', lastName: 'Попов', age: 47, city: 'Нижний Новгород' },
+  { firstName: 'Мария', lastName: 'Соколова', age: 33, city: 'Самара' },
+  { firstName: 'Николай', lastName: 'Лебедев', age: 52, city: 'Омск' },
+  { firstName: 'Ольга', lastName: 'Козлова', age: 26, city: 'Ростов-на-Дону' },
+  { firstName: 'Павел', lastName: 'Новиков', age: 39, city: 'Уфа' },
+  { firstName: 'Татьяна', lastName: 'Морозова', age: 29, city: 'Красноярск' },
+  { firstName: 'Алексей', lastName: 'Фёдоров', age: 44, city: 'Воронеж' },
+  { firstName: 'Наталья', lastName: 'Алексеева', age: 31, city: 'Пермь' },
+  { firstName: 'Сергей', lastName: 'Дмитриев', age: 36, city: 'Волгоград' },
+  { firstName: 'Мария', lastName: 'Фёдорова', age: 24, city: 'Тюмень' },
+  { firstName: 'Алексей', lastName: 'Смирнов', age: 27, city: 'Саратов' },
+  { firstName: 'Екатерина', lastName: 'Кузнецова', age: 38, city: 'Тольятти' },
+  { firstName: 'Владимир', lastName: 'Попов', age: 55, city: 'Ижевск' },
+  { firstName: 'Ирина', lastName: 'Соколова', age: 34, city: 'Барнаул' },
+  { firstName: 'Andrei', lastName: 'Kowalski', age: 29, city: 'Warsaw' },
+  { firstName: 'Elena', lastName: 'Nowak', age: 32, city: 'Warsaw' },
+  { firstName: 'John', lastName: 'Smith', age: 40, city: 'London' },
+  { firstName: 'Елена', lastName: 'Петрова', age: 23, city: 'Москва' },
+  { firstName: 'Николай', lastName: 'Волков', age: 45, city: 'Хабаровск' }
+];
+
+const WOMEN = ['Анна','Галина','Елена','Мария','Ольга','Татьяна','Наталья','Екатерина','Ирина'];
+const MEN = ['Борис','Виктор','Дмитрий','Иван','Николай','Павел','Алексей','Сергей','Андрей','Владимир','John','Andrei'];
+
+const fullName = (p) => `${p.firstName} ${p.lastName}`;
+
+function MainFilters() {
+  const [search, setSearch] = useState('');
+  const [gender, setGender] = useState('all');
+  const [lengthFilter, setLengthFilter] = useState('all');
+  const [letter, setLetter] = useState('');
+  const [sortAsc, setSortAsc] = useState(true);
+  const [showStats, setShowStats] = useState(true);
+
+  const filtered = useMemo(() => {
+    let r = [...PEOPLE];
+    if (gender === 'male') r = r.filter(p => MEN.includes(p.firstName));
+    else if (gender === 'female') r = r.filter(p => WOMEN.includes(p.firstName));
+    if (lengthFilter === 'short') r = r.filter(p => fullName(p).replace(/\s/g, '').length <= 10);
+    else if (lengthFilter === 'long') r = r.filter(p => fullName(p).replace(/\s/g, '').length > 10);
+    if (letter) r = r.filter(p => p.firstName.startsWith(letter));
+    if (search.trim()) {
+      const t = search.trim().toLowerCase();
+      r = r.filter(p => fullName(p).toLowerCase().includes(t) || p.city.toLowerCase().includes(t));
+    }
+    r.sort((a, b) => sortAsc ? fullName(a).localeCompare(fullName(b)) : fullName(b).localeCompare(fullName(a)));
+    return r;
+  }, [search, gender, lengthFilter, letter, sortAsc]);
+
+  const letters = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ'.split('');
+
+  const hl = (text, term) => {
+    if (!term.trim()) return text;
+    const re = new RegExp(`(${term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(re);
+    return parts.map((p, i) => re.test(p) ? <span className="hl" key={i}>{p}</span> : p);
+  };
+
+  const exportTxt = () => {
+    const data = filtered.map(p => `${fullName(p)}, ${p.age}, ${p.city}`).join('\n');
+    const blob = new Blob([data], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'filtered.txt'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div>
+      <div className="toolbar">
+        <input style={{ flex: 1, minWidth: 200 }} placeholder="Поиск по имени, фамилии или городу..." value={search} onChange={e => setSearch(e.target.value)} />
+        {search && <button className="btn-gray" onClick={() => setSearch('')}>✕ Сбросить поиск</button>}
+      </div>
+      {showStats && (
+        <div className="stats">
+          <span>📊 Показано: <b>{filtered.length}</b> из <b>{PEOPLE.length}</b></span>
+          <span>{search || gender !== 'all' || lengthFilter !== 'all' || letter ? '🔍 Фильтр активен' : '📋 Все элементы'}</span>
+          <button className="btn-gray" style={{ padding: '3px 10px', fontSize: 12 }} onClick={() => setShowStats(false)}>Скрыть</button>
+        </div>
+      )}
+      {!showStats && <div className="toolbar"><button className="btn-gray" onClick={() => setShowStats(true)}>📊 Показать статистику</button></div>}
+
+      <div className="toolbar">
+        <select value={gender} onChange={e => setGender(e.target.value)}>
+          <option value="all">Все</option><option value="male">👨 Мужчины</option><option value="female">👩 Женщины</option>
+        </select>
+        <select value={lengthFilter} onChange={e => setLengthFilter(e.target.value)}>
+          <option value="all">Любая длина</option><option value="short">Короткие (≤10) имени+фамилии</option><option value="long">Длинные (>10)</option>
+        </select>
+        <button className="btn-green" onClick={() => setSortAsc(!sortAsc)}>{sortAsc ? '⬆ А-Я' : '⬇ Я-А'}</button>
+        <button className="btn-orange" onClick={exportTxt} disabled={filtered.length === 0}>📥 Экспорт ({filtered.length})</button>
+      </div>
+
+      <p style={{ margin: '6px 0', fontSize: 13, color: '#666' }}>Алфавитный указатель (клик — фильтр по первой букве):</p>
+      <div className="letters">
+        {letters.map(l => (
+          <button key={l} className={letter === l ? 'on' : ''} onClick={() => setLetter(letter === l ? '' : l)}>{l}</button>
+        ))}
+        {letter && <button className="btn-gray" onClick={() => setLetter('')}>✕ {letter}</button>}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="empty">😕 Ничего не найдено</div>
+      ) : (
+        <ul className="lst">
+          {filtered.map((p, i) => (
+            <li key={fullName(p) + i}>
+              <span>{hl(fullName(p), search)} <small style={{ color: '#868e96' }}>({p.age}, {p.city})</small></span>
+              <span className="meta">#{i + 1}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function MultiChecks() {
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState([]);
+
+  const toggle = (f) => setFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
+
+  const filtered = useMemo(() => {
+    let r = [...PEOPLE];
+    if (filters.includes('male')) r = r.filter(p => MEN.includes(p.firstName));
+    if (filters.includes('female')) r = r.filter(p => WOMEN.includes(p.firstName));
+    if (filters.includes('moscow')) r = r.filter(p => p.city === 'Москва');
+    if (filters.includes('young')) r = r.filter(p => p.age <= 30);
+    if (filters.includes('long')) r = r.filter(p => fullName(p).replace(/\s/g, '').length > 12);
+    if (search.trim()) { const t = search.trim().toLowerCase(); r = r.filter(p => fullName(p).toLowerCase().includes(t)); }
+    return r;
+  }, [search, filters]);
+
+  const list = [['male', '👨 Мужчины'], ['female', '👩 Женщины'], ['moscow', '📍 Москва'], ['young', '🎂 до 30 лет'], ['long', '📏 длинные имена']];
+
+  return (
+    <div>
+      <div className="checks">
+        {list.map(([f, label]) => (
+          <label key={f}><input type="checkbox" checked={filters.includes(f)} onChange={() => toggle(f)} /> {label}</label>
+        ))}
+      </div>
+      <div className="toolbar">
+        <input placeholder="Дополнительный поиск..." value={search} onChange={e => setSearch(e.target.value)} />
+        <span className="stats" style={{ margin: 0 }}>Выбрано фильтров: <b>{filters.length}</b>, результатов: <b>{filtered.length}</b></span>
+      </div>
+      {filters.length === 0 && <div className="empty">Отметьте фильтры галочками</div>}
+      <ul className="lst">
+        {filtered.map((p, i) => <li key={fullName(p) + i}><span>{fullName(p)} <small style={{ color: '#868e96' }}>({p.age}, {p.city})</small></span></li>)}
+      </ul>
+    </div>
+  );
+}
+
+function Animated() {
+  const [search, setSearch] = useState('');
+  const filtered = useMemo(() => PEOPLE.filter(p => !search.trim() || fullName(p).toLowerCase().includes(search.trim().toLowerCase())), [search]);
+
+  return (
+    <div>
+      <p style={{ color: '#495057' }}>Плавное появление/исчезновение элементов через CSS transition (key-remount с анимацией).</p>
+      <div className="toolbar">
+        <input placeholder="Поиск → элементы анимированы" value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+      <ul className="lst">
+        {filtered.map((p, i) => (
+          <li key={fullName(p)} className="itemGrad" style={{ animation: 'fadeIn .3s ease' }}>
+            <span>{i + 1}. {fullName(p)} <small>({p.age}, {p.city})</small></span>
+          </li>
+        ))}
+      </ul>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}`}</style>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="wrap">
+      <div className="task">
+        <h2>Задание 1–2: Больше данных + фильтр по длине имени</h2>
+        <p style={{ color: '#495057' }}>Добавлено 25 записей (включая имена на других языках). Фильтр по длине полного имени (≤10 / &gt;10).</p>
+        <MainFilters />
+      </div>
+      <div className="task">
+        <h2>Задание 3: Поиск по первой букве (алфавитный указатель)</h2>
+        <p style={{ color: '#495057' }}>Клик по букве фильтрует имена, начинающиеся с неё; активная буква выделена.</p>
+      </div>
+      <div className="task">
+        <h2>Задание 4: Расширенный поиск (имя, фамилия, возраст, город)</h2>
+        <p style={{ color: '#495057' }}>Данные — объекты; поиск идёт по всем полям.</p>
+      </div>
+      <div className="task">
+        <h2>Задание 5: Множественный выбор фильтров (чекбоксы)</h2>
+        <MultiChecks />
+      </div>
+      <div className="task">
+        <h2>Задание 6: Экспорт результатов</h2>
+        <p style={{ color: '#495057' }}>Кнопка «Экспорт» скачивает отфильтрованный список в текстовый файл.</p>
+      </div>
+      <div className="task">
+        <h2>Задание 7: Анимация при фильтрации</h2>
+        <Animated />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

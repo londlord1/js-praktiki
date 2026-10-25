@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР07 — Валидация формы средствами JavaScript</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;font-weight:600;margin-bottom:4px;font-size:14px}
+        .form-group input{width:100%;max-width:340px}
+        .field-error{color:#dc3545;font-size:12px;display:block;min-height:16px;margin-top:2px}
+        .field-success input{border-color:#28a745}
+        .field-error-box input{border-color:#dc3545}
+        .pw-wrap{display:flex;align-items:center;gap:4px;max-width:340px}
+        .pw-wrap input{flex:1}
+        .pw-toggle{border:none;background:transparent;color:#3b5bdb;cursor:pointer;font-size:15px;margin:0}
+        #reg-success{display:none;background:#e8f5e9;color:#2e7d32;border-radius:8px;padding:12px 14px;margin-top:10px;font-weight:600}
+        #reg-success.visible{display:block}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР07 — Валидация формы средствами JavaScript</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения — улучшенная регистрационная форма</p>
+
+    <section class="card">
+        <h2>Форма регистрации (улучшенная)</h2>
+        <p class="hint">
+            Доработки: пароль минимум 8 символов && с хотя бы одной цифрой; «глаз» показа/скрытия пароля;
+            поле «Дата рождения» с проверкой возраста (не младше 18 лет).
+        </p>
+
+        <form id="regForm" novalidate>
+            <div class="form-group" id="nameGroup">
+                <label for="regName">Имя *</label>
+                <input type="text" id="regName" placeholder="Введите ваше имя">
+                <span class="field-error" id="regNameErr"></span>
+            </div>
+
+            <div class="form-group" id="emailGroup">
+                <label for="regEmail">Email *</label>
+                <input type="email" id="regEmail" placeholder="example@mail.ru">
+                <span class="field-error" id="regEmailErr"></span>
+            </div>
+
+            <div class="form-group" id="passGroup">
+                <label for="regPass">Пароль *</label>
+                <div class="pw-wrap">
+                    <input type="password" id="regPass" placeholder="Минимум 8 символов, с цифрой">
+                    <button type="button" class="pw-toggle" id="pwToggle" title="Показать/скрыть пароль">👁</button>
+                </div>
+                <span class="field-error" id="regPassErr"></span>
+            </div>
+
+            <div class="form-group" id="confirmGroup">
+                <label for="regConfirm">Подтверждение пароля *</label>
+                <input type="password" id="regConfirm" placeholder="Повторите пароль">
+                <span class="field-error" id="regConfirmErr"></span>
+            </div>
+
+            <div class="form-group" id="birthGroup">
+                <label for="regBirth">Дата рождения *</label>
+                <input type="date" id="regBirth">
+                <span class="field-error" id="regBirthErr"></span>
+            </div>
+
+            <div class="row">
+                <button type="submit" class="success">Зарегистрироваться</button>
+                <button type="button" class="danger" id="regReset">Очистить</button>
+            </div>
+        </form>
+
+        <div id="reg-success">✅ Форма успешно отправлена!</div>
+        <div class="output" id="pr07-output"></div>
+    </section>
+
+    <script>
+        const nameInput = document.getElementById('regName');
+        const emailInput = document.getElementById('regEmail');
+        const passInput = document.getElementById('regPass');
+        const confirmInput = document.getElementById('regConfirm');
+        const birthInput = document.getElementById('regBirth');
+
+        function setValid(groupId, valid, message) {
+            const g = document.getElementById(groupId);
+            const err = g.querySelector('.field-error');
+            err.textContent = valid ? '' : message;
+            g.className = 'form-group' + (valid ? ' field-success' : ' field-error-box');
+            return valid;
+        }
+
+        function validateName() {
+            const v = nameInput.value.trim();
+            const regex = /^[А-Яа-яA-Za-z\s]{2,}$/;
+            if (v === '') return setValid('nameGroup', false, 'Имя обязательно для заполнения');
+            if (!regex.test(v)) return setValid('nameGroup', false, 'Имя: только буквы, минимум 2 символа');
+            return setValid('nameGroup', true, '');
+        }
+
+        function validateEmail() {
+            const v = emailInput.value.trim();
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (v === '') return setValid('emailGroup', false, 'Email обязателен');
+            if (!regex.test(v)) return setValid('emailGroup', false, 'Введите корректный email (example@domain.com)');
+            return setValid('emailGroup', true, '');
+        }
+
+        function validatePassword() {
+            const v = passInput.value;
+            if (v === '') return setValid('passGroup', false, 'Пароль обязателен');
+            if (v.length < 8) return setValid('passGroup', false, 'Пароль должен содержать минимум 8 символов');
+            if (!/\d/.test(v)) return setValid('passGroup', false, 'Пароль должен содержать хотя бы одну цифру');
+            return setValid('passGroup', true, '');
+        }
+
+        function validateConfirm() {
+            const p = passInput.value;
+            const c = confirmInput.value;
+            if (c === '') return setValid('confirmGroup', false, 'Подтвердите пароль');
+            if (p !== c) return setValid('confirmGroup', false, 'Пароли не совпадают');
+            return setValid('confirmGroup', true, '');
+        }
+
+        function validateBirth() {
+            const v = birthInput.value;
+            if (!v) return setValid('birthGroup', false, 'Укажите дату рождения');
+            const birth = new Date(v);
+            if (isNaN(birth)) return setValid('birthGroup', false, 'Некорректная дата');
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+            if (age < 18) return setValid('birthGroup', false, 'Вам должно быть не менее 18 лет');
+            return setValid('birthGroup', true, '');
+        }
+
+        function validateAll() {
+            const ok = validateName() && validateEmail() && validatePassword() &&
+                validateConfirm() && validateBirth();
+            const out = document.getElementById('pr07-output');
+            if (ok) {
+                out.textContent = 'Все поля валидны ✓\n\nИмя: ' + nameInput.value.trim() +
+                    '\nEmail: ' + emailInput.value.trim() + '\nДата рождения: ' + birthInput.value;
+            } else {
+                out.textContent = 'Форма содержит ошибки. Исправьте выделенные поля.';
+            }
+            return ok;
+        }
+
+        nameInput.addEventListener('input', validateName);
+        emailInput.addEventListener('input', validateEmail);
+        passInput.addEventListener('input', function() {
+            validatePassword();
+            if (confirmInput.value) validateConfirm();
+        });
+        confirmInput.addEventListener('input', validateConfirm);
+        birthInput.addEventListener('input', validateBirth);
+
+        document.getElementById('pwToggle').addEventListener('click', function() {
+            const isPass = passInput.type === 'password';
+            passInput.type = isPass ? 'text' : 'password';
+            this.textContent = isPass ? '🙈' : '👁';
+        });
+
+        document.getElementById('regForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validateAll()) {
+                document.getElementById('reg-success').classList.add('visible');
+                setTimeout(function() {
+                    document.getElementById('reg-success').classList.remove('visible');
+                }, 4000);
+            }
+        });
+
+        document.getElementById('regReset').addEventListener('click', function() {
+            document.getElementById('regForm').reset();
+            ['nameGroup', 'emailGroup', 'passGroup', 'confirmGroup', 'birthGroup'].forEach(function(id) {
+                document.getElementById(id).className = 'form-group';
+                document.getElementById(id).querySelector('.field-error').textContent = '';
+            });
+            document.getElementById('pr07-output').textContent = '';
+            document.getElementById('reg-success').classList.remove('visible');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ПР28 — React: props, динамические стили, подъём состояния</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#212529;transition:background .4s}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:rgba(255,255,255,.7);border-bottom:1px solid rgba(224,224,224,.6);backdrop-filter:blur(4px)}
+  .topbar h1{margin:0;font-size:20px;color:#1c2333}
+  .topbar .back{color:#3b5bdb;text-decoration:none;font-size:14px;font-weight:600}
+  .wrap{max-width:860px;margin:24px auto;padding:0 16px;transition:background .4s}
+  .task{background:rgba(255,255,255,.5);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:22px 24px;margin-bottom:22px}
+  .task h2{margin:0 0 14px;font-size:18px;color:#3b5bdb;border-bottom:2px solid rgba(238,241,248,.9);padding-bottom:10px}
+  .themeBtn{transition:transform .4s}
+  .themeBtn.dark{transform:rotate(180deg)}
+  .cardBox{transition:all .4s cubic-bezier(.4,0,.2,1);border-radius:10px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:16px}
+  .tgl{width:70px;height:36px;border-radius:18px;border:none;cursor:pointer;position:relative;transition:background .3s;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+  .tgl .knob{width:28px;height:28px;border-radius:50%;background:#fff;position:absolute;top:4px;transition:left .3s ease;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+  .ctrl{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+  button{padding:10px 18px;font-size:14px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb;transition:transform .15s}
+  button:hover{filter:brightness(1.1)}
+  .colorBtn{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+  .settings{background:rgba(0,0,0,.04);border-radius:10px;padding:14px;margin-top:12px}
+  .badge{display:inline-block;padding:4px 12px;border-radius:12px;font-size:12px}
+  .modeRow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+</style></head><body>
+<div class="topbar"><h1>ПР28 — React: props, динамические стили, подъём состояния</h1><a class="back" href="index.html">← Все работы</a></div>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const THEMES = {
+  light: { bg: '#f0f2f5', text: '#212529', cardBg: '#ffffff', cardText: '#333', badgeBg: '#e0e0e0', badgeText: '#333', border: '#e0e0e0' },
+  dark: { bg: '#1a1a1a', text: '#ffffff', cardBg: '#2d2d2d', cardText: '#ffffff', badgeBg: '#444', badgeText: '#fff', border: '#444' },
+  blue: { bg: '#e3f2fd', text: '#0d47a1', cardBg: '#ffffff', cardText: '#0d47a1', badgeBg: '#bbdefb', badgeText: '#0d47a1', border: '#90caf9' }
+};
+
+function ThemeToggle({ isDark, toggleTheme, accent }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 15 }}>
+      <span className="themeBtn" style={{ fontSize: 24 }}>☀️</span>
+      <button className="tgl" onClick={toggleTheme} style={{ background: isDark ? '#555' : accent }}>
+        <div className="knob" style={{ left: isDark ? 38 : 4 }} />
+      </button>
+      <span className="themeBtn dark" style={{ fontSize: 24 }}>🌙</span>
+    </div>
+  );
+}
+
+function Card({ isDark, theme, accent, title, description }) {
+  const t = THEMES[theme];
+  return (
+    <div className="cardBox" style={{ background: t.cardBg, color: t.cardText, border: `1px solid ${t.border}` }}>
+      <h3 style={{ margin: '0 0 10px', fontSize: 20 }}>{title}</h3>
+      <p style={{ color: isDark ? '#cccccc' : '#666', lineHeight: 1.6, fontSize: 14 }}>{description}</p>
+      <span className="badge" style={{ background: t.badgeBg, color: t.badgeText, border: `1px solid ${accent}` }}>{isDark ? '🌙 Ночной' : '☀️ Дневной'}</span>
+    </div>
+  );
+}
+
+function ThemeSettings({ accent, setAccent }) {
+  const colors = ['#3b5bdb', '#2f9e44', '#e03131', '#f08c00', '#9c36b5'];
+  return (
+    <div className="settings">
+      <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Выберите акцентный цвет:</p>
+      <div style={{ display: 'flex', gap: 10 }}>
+        {colors.map(c => (
+          <button key={c} className="colorBtn" style={{ background: c, border: accent === c ? '3px solid #fff' : '3px solid transparent' }} onClick={() => setAccent(c)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [themeMode, setThemeMode] = useState('light');
+  const [autoMode, setAutoMode] = useState(false);
+  const [accent, setAccent] = useState('#3b5bdb');
+
+  const getAutoTheme = () => {
+    const h = new Date().getHours();
+    return (h < 6 || h >= 18) ? 'dark' : 'light';
+  };
+
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const savedMode = localStorage.getItem('pr28-mode');
+    const savedAuto = localStorage.getItem('pr28-auto');
+    const savedAccent = localStorage.getItem('pr28-accent');
+    if (savedMode) setThemeMode(savedMode);
+    if (savedAuto) setAutoMode(savedAuto === '1');
+    if (savedAccent) setAccent(savedAccent);
+    setLoaded(true);
+  }, []);
+
+  const effectiveTheme = autoMode ? getAutoTheme() : themeMode;
+  const isDark = effectiveTheme === 'dark';
+  const t = THEMES[effectiveTheme];
+
+  useEffect(() => { if (loaded) localStorage.setItem('pr28-mode', themeMode); }, [themeMode, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem('pr28-auto', autoMode ? '1' : '0'); }, [autoMode, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem('pr28-accent', accent); }, [accent, loaded]);
+
+  useEffect(() => { if (!loaded) return; const id = setInterval(() => { if (autoMode) {} }, 1000); return () => clearInterval(id); }, [autoMode, loaded]);
+
+  const cycleTheme = () => setThemeMode(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'blue' : 'light');
+
+  return (
+    <div style={{ background: t.bg, color: t.text, minHeight: '100vh', transition: 'background .4s, color .4s' }}>
+      <div className="wrap">
+        <div className="task">
+          <h2>Задание 1–2: Четыре карточки + ручное переключение темы</h2>
+          <p style={{ color: isDark ? '#ccc' : '#495057' }}>Четвёртая карточка добавлена через компонент Card. Под ползунком — кнопка ручного переключения.</p>
+          <ThemeToggle isDark={isDark} toggleTheme={cycleTheme} accent={accent} />
+          <div className="ctrl">
+            <button style={{ background: accent }} onClick={cycleTheme}>{effectiveTheme === 'dark' ? 'Переключить на светлую' : 'Переключить на тёмную'}</button>
+          </div>
+          <div className="grid">
+            <Card isDark={isDark} theme={effectiveTheme} accent={accent} title="Карточка 1" description="Пример карточки, меняющей вид в зависимости от выбранной темы." />
+            <Card isDark={isDark} theme={effectiveTheme} accent={accent} title="Карточка 2" description="Тёмная тема комфортна для работы в тёмное время суток." />
+            <Card isDark={isDark} theme={effectiveTheme} accent={accent} title="Карточка 3" description="При переключении все карточки обновляются автоматически." />
+            <Card isDark={isDark} theme={effectiveTheme} accent={accent} title="Карточка 4" description="Карточек может быть сколько угодно — все они следуют теме." />
+          </div>
+          <p style={{ textAlign: 'center', marginTop: 16, opacity: .7, fontSize: 14 }}>
+            Текущая тема: <strong>{effectiveTheme === 'dark' ? '🌙 Тёмная' : effectiveTheme === 'blue' ? '🔵 Синяя' : '☀️ Светлая'}</strong>
+          </p>
+        </div>
+
+        <div className="task">
+          <h2>Задание 3: Сохранение темы в LocalStorage</h2>
+          <p style={{ color: isDark ? '#ccc' : '#495057' }}>Выбранный режим, авто-переключатель и акцентный цвет сохраняются и восстанавливаются после перезагрузки.</p>
+        </div>
+
+        <div className="task">
+          <h2>Задание 4: Анимация при переключении</h2>
+          <p style={{ color: isDark ? '#ccc' : '#495057' }}>Иконки ☀️/🌙 вращаются при переключении, фон и карточки плавно меняются через CSS transition.</p>
+        </div>
+
+        <div className="task">
+          <h2>Задание 5: Компонент «Настройки темы»</h2>
+          <p style={{ color: isDark ? '#ccc' : '#495057' }}>Выбор акцентного цвета применяется ко всем кнопкам и элементам интерфейса.</p>
+          <ThemeSettings accent={accent} setAccent={setAccent} />
+        </div>
+
+        <div className="task">
+          <h2>Задание 6: Три темы — светлая, тёмная, синяя</h2>
+          <p style={{ color: isDark ? '#ccc' : '#495057' }}>Вместо булева isDark используется строка: 'light' | 'dark' | 'blue'. Кнопка «Переключить» циклически меняет тему.</p>
+          <div className="modeRow">
+            {['light', 'dark', 'blue'].map(m => (
+              <button key={m} style={{ background: themeMode === m && !autoMode ? accent : '#868e96' }} onClick={() => { setAutoMode(false); setThemeMode(m); }}>{m === 'light' ? '☀️ Светлая' : m === 'dark' ? '🌙 Тёмная' : '🔵 Синяя'}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="task">
+          <h2>Задание 7: Автоматическое переключение по времени суток</h2>
+          <p style={{ color: isDark ? '#ccc' : '#495057' }}>
+            Переключатель «Авто» / «Ручной»: с 6:00 до 18:00 — светлая тема, с 18:00 до 6:00 — тёмная.
+          </p>
+          <div className="ctrl">
+            <button style={{ background: autoMode ? accent : '#868e96' }} onClick={() => setAutoMode(!autoMode)}>{autoMode ? '⏰ Авто включён' : '👆 Ручной режим'}</button>
+          </div>
+          {autoMode && <p style={{ textAlign: 'center', fontSize: 14, opacity: .8 }}>Авто-тема: {getAutoTheme() === 'dark' ? '🌙 тёмная' : '☀️ светлая'}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР23 — Наследование и полиморфизм</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР23 — Наследование и полиморфизм</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения: классы-наследники (EducationalBook, skipTo, Collection).</div>
+
+<section class="card">
+  <h2>Задание 1: Класс EducationalBook (учебник)</h2>
+  <p>Наследует от Book, добавляет <code>subject</code> и <code>level</code> ('beginner' | 'intermediate' | 'advanced'), переопределяет <code>getInfo()</code>.</p>
+  <div class="row">
+    <input type="text" id="ebTitle" placeholder="Название" value="Алгебра 9 класс">
+    <input type="text" id="ebAuthor" placeholder="Автор" value="Мордкович">
+    <input type="number" id="ebYear" placeholder="Год" value="2015">
+    <input type="text" id="ebSubject" placeholder="Предмет" value="Математика">
+    <select id="ebLevel">
+      <option value="beginner">Начальный</option>
+      <option value="intermediate">Средний</option>
+      <option value="advanced">Продвинутый</option>
+    </select>
+    <button class="success" id="ebCreateBtn">Создать учебник</button>
+  </div>
+  <div class="output" id="out1">Создайте учебник, чтобы увидеть переопределённый getInfo().</div>
+</section>
+
+<section class="card">
+  <h2>Задание 2: Метод skipTo(time) для AudioBook</h2>
+  <p>Позволяет установить текущее время прослушивания (с ограничением 0..duration).</p>
+  <div class="row">
+    <input type="number" id="abDuration" placeholder="Длительность (мин)" value="180">
+    <input type="text" id="abNarrator" placeholder="Чтец" value="Алексей Иванов">
+    <button class="success" id="abCreateBtn">Создать аудиокнигу</button>
+  </div>
+  <div class="row">
+    <button id="abSkipBtn">Skip to: <input type="number" id="abSkipTo" value="45" style="width:70px"> мин</button>
+    <button id="abListenBtn">Прослушать +30 мин</button>
+    <button id="abResetBtn">Сбросить прогресс</button>
+  </div>
+  <div class="output" id="out2">Создайте аудиокнигу, затем используйте skipTo / listen / reset.</div>
+</section>
+
+<section class="card">
+  <h2>Задание 3: Класс Collection</h2>
+  <p>Коллекция книг любых типов (Book, EBook, AudioBook) с методами <code>addBook</code>, <code>getAllBooks</code>, <code>getByType</code>.</p>
+  <div class="row">
+    <input type="text" id="colTitle" placeholder="Название">
+    <input type="text" id="colAuthor" placeholder="Автор">
+    <select id="colType">
+      <option value="book">📖 Обычная (Book)</option>
+      <option value="ebook">📱 Электронная (EBook)</option>
+      <option value="audiobook">🎧 Аудиокнига (AudioBook)</option>
+    </select>
+    <button class="success" id="colAddBtn">Добавить в коллекцию</button>
+  </div>
+  <div class="row">
+    <button id="colAllBtn">Все (getAllBooks)</button>
+    <button id="colBookBtn">Только book</button>
+    <button id="colEbookBtn">Только ebook</button>
+    <button id="colAudiobookBtn">Только audiobook</button>
+  </div>
+  <div class="output" id="out3">Создайте коллекцию и добавляйте книги разных типов.</div>
+</section>
+
+<script>
+// ------------------------------------------------------------------
+// Базовые классы Book, EBook, AudioBook (из основной практики)
+// ------------------------------------------------------------------
+class Book {
+  #id;
+  constructor(title, author, year) {
+    this.#id = Date.now() + Math.random();
+    this.title = title;
+    this.author = author;
+    this.year = year;
+    this.isAvailable = true;
+  }
+  getId() { return this.#id; }
+  get age() { return new Date().getFullYear() - this.year; }
+  toggleAvailability() { this.isAvailable = !this.isAvailable; }
+  getInfo() {
+    const s = this.isAvailable ? '✅ Доступна' : '❌ Выдана';
+    return `"${this.title}" — ${this.author} (${this.year}), ${s}`;
+  }
+}
+
+class EBook extends Book {
+  constructor(title, author, year, fileSize, format = 'PDF') {
+    super(title, author, year);
+    this.fileSize = fileSize;
+    this.format = format;
+  }
+  getInfo() {
+    return super.getInfo() + ` (Электронная, ${this.format}, ${this.fileSize} МБ)`;
+  }
+}
+
+class AudioBook extends Book {
+  constructor(title, author, year, duration, narrator) {
+    super(title, author, year);
+    this.duration = duration;
+    this.narrator = narrator;
+    this.currentTime = 0;
+  }
+  getInfo() {
+    const h = Math.floor(this.duration / 60), m = this.duration % 60;
+    return super.getInfo() + ` (Аудиокнига, ${h > 0 ? h + ' ч ' + m + ' мин' : m + ' мин'}, чтец: ${this.narrator})`;
+  }
+  listen(minutes) {
+    this.currentTime = Math.min(this.currentTime + minutes, this.duration);
+    return this.currentTime;
+  }
+  // ЗАДАНИЕ 2: skipTo(time)
+  skipTo(time) {
+    if (time < 0) time = 0;
+    if (time > this.duration) time = this.duration;
+    this.currentTime = time;
+    return time;
+  }
+  getProgressPercent() {
+    return this.duration ? Math.round((this.currentTime / this.duration) * 100) : 0;
+  }
+}
+
+// ------------------------------------------------------------------
+// ЗАДАНИЕ 1: EducationalBook
+// ------------------------------------------------------------------
+class EducationalBook extends Book {
+  constructor(title, author, year, subject, level = 'beginner') {
+    super(title, author, year);
+    this.subject = subject;
+    this.level = level;
+  }
+  getInfo() {
+    const base = super.getInfo();
+    const levels = { beginner: 'Начальный', intermediate: 'Средний', advanced: 'Продвинутый' };
+    return base + ` (Учебник по ${this.subject}, ${levels[this.level] || this.level})`;
+  }
+}
+
+const out1 = document.getElementById('out1');
+document.getElementById('ebCreateBtn').addEventListener('click', () => {
+  const t = document.getElementById('ebTitle').value.trim();
+  const a = document.getElementById('ebAuthor').value.trim();
+  const y = parseInt(document.getElementById('ebYear').value, 10);
+  const s = document.getElementById('ebSubject').value.trim();
+  const lvl = document.getElementById('ebLevel').value;
+  if (!t || !a || isNaN(y)) { out1.textContent = 'Заполните поля.'; return; }
+  const eb = new EducationalBook(t, a, y, s, lvl);
+  out1.textContent = 'Создан учебник (зад. 1):\n' + eb.getInfo() +
+    '\ninstanceof Book: ' + (eb instanceof Book) +
+    ', instanceof EducationalBook: ' + (eb instanceof EducationalBook);
+});
+
+// ------------------------------------------------------------------
+// ЗАДАНИЕ 2: AudioBook + skipTo
+// ------------------------------------------------------------------
+let ab = null;
+const out2 = document.getElementById('out2');
+function showAB() {
+  if (!ab) return;
+  out2.textContent = ab.getInfo() +
+    '\nПрослушано: ' + ab.currentTime + ' мин из ' + ab.duration +
+    ' (' + ab.getProgressPercent() + '%)';
+}
+document.getElementById('abCreateBtn').addEventListener('click', () => {
+  const d = parseInt(document.getElementById('abDuration').value, 10);
+  const n = document.getElementById('abNarrator').value.trim() || 'Чтец';
+  ab = new AudioBook('Война и мир', 'Лев Толстой', 1869, d, n);
+  out2.textContent = 'Аудиокнига создана (зад. 2):\n' + ab.getInfo();
+  showAB();
+});
+document.getElementById('abSkipBtn').addEventListener('click', () => {
+  if (!ab) return;
+  const t = parseInt(document.getElementById('abSkipTo').value, 10);
+  ab.skipTo(t); // ЗАДАНИЕ 2: skipTo
+  out2.textContent = '⏩ skipTo(' + t + ') → ' + ab.currentTime + ' мин (зад. 2)';
+  showAB();
+});
+document.getElementById('abListenBtn').addEventListener('click', () => { if (ab) { ab.listen(30); showAB(); } });
+document.getElementById('abResetBtn').addEventListener('click', () => { if (ab) { ab.currentTime = 0; showAB(); } });
+
+// ------------------------------------------------------------------
+// ЗАДАНИЕ 3: Collection
+// ------------------------------------------------------------------
+class Collection {
+  constructor() { this._books = []; }
+  addBook(book) { this._books.push(book); }
+  getAllBooks() { return this._books; }
+  getByType(type) {
+    if (type === 'ebook') return this._books.filter(b => b instanceof EBook);
+    if (type === 'audiobook') return this._books.filter(b => b instanceof AudioBook);
+    return this._books.filter(b => !(b instanceof EBook) && !(b instanceof AudioBook));
+  }
+}
+
+const collection = new Collection();
+const colout = document.getElementById('out3');
+// стартовая коллекция
+const c1 = new Book('Мастер и Маргарита', 'М. Булгаков', 1967);
+collection.addBook(c1);
+const c2 = new EBook('1984', 'Джордж Оруэлл', 1949, 2.5, 'EPUB');
+collection.addBook(c2);
+const c3 = new AudioBook('Война и мир', 'Лев Толстой', 1869, 180, 'Алексей Иванов');
+collection.addBook(c3);
+
+function showCol(books, label) {
+  colout.textContent = label + ' (' + books.length + '):\n' +
+    (books.length ? books.map(b => b.getInfo()).join('\n') : '(нет)');
+}
+showCol(collection.getAllBooks(), 'Стартовая коллекция (зад. 3)');
+
+document.getElementById('colAddBtn').addEventListener('click', () => {
+  const t = document.getElementById('colTitle').value.trim();
+  const a = document.getElementById('colAuthor').value.trim();
+  const type = document.getElementById('colType').value;
+  if (!t || !a) { colout.textContent = 'Введите название и автора.'; return; }
+  let book;
+  if (type === 'ebook') book = new EBook(t, a, 2020, 1.2, 'PDF');
+  else if (type === 'audiobook') book = new AudioBook(t, a, 2020, 90, 'Чтец');
+  else book = new Book(t, a, 2020);
+  collection.addBook(book);
+  showCol(collection.getAllBooks(), 'Коллекция после добавления');
+});
+document.getElementById('colAllBtn').addEventListener('click', () => showCol(collection.getAllBooks(), 'Все книги (getAllBooks)'));
+document.getElementById('colBookBtn').addEventListener('click', () => showCol(collection.getByType('book'), 'Только обычные (book)'));
+document.getElementById('colEbookBtn').addEventListener('click', () => showCol(collection.getByType('ebook'), 'Только электронные (ebook)'));
+document.getElementById('colAudiobookBtn').addEventListener('click', () => showCol(collection.getByType('audiobook'), 'Только аудиокниги (audiobook)'));
+</script>
+</body>
+</html>

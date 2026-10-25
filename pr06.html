@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР06 — Объекты JavaScript (To-Do менеджер)</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+
+        .todo-form{background:#f6f8fc;border-radius:10px;padding:14px;margin-bottom:14px}
+        .todo-form .inputs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+        .todo-form input[type=text]{flex:1;min-width:200px}
+        #todo-list{list-style:none;padding:0;margin:0}
+        .todo-item{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;margin-bottom:8px;background:#f8f9fa;border-radius:8px;border-left:4px solid #3b5bdb}
+        .todo-item.high{border-left-color:#dc3545}
+        .todo-item.medium{border-left-color:#f39c12}
+        .todo-item.low{border-left-color:#28a745}
+        .todo-item.overdue:not(.completed){background:#fdeaea;border:1px solid #f5c6c6}
+        .todo-item.completed{opacity:.6}
+        .todo-item.completed .todo-text{text-decoration:line-through;color:#999}
+        .todo-check{flex-shrink:0}
+        .todo-body{flex:1}
+        .todo-text{font-size:15px;cursor:pointer}
+        .todo-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#778;margin-top:4px}
+        .todo-meta .priority{font-weight:bold;text-transform:lowercase}
+        .priority.high{color:#dc3545}
+        .priority.medium{color:#d47f00}
+        .priority.low{color:#28a745}
+        .todo-date-created{color:#778}
+        .todo-due{font-weight:bold}
+        .todo-due.overdue{color:#dc3545}
+        .todo-actions{flex-shrink:0;display:flex;gap:6px}
+        .todo-actions button{padding:4px 10px;font-size:12px;margin:0}
+        .empty-todo{text-align:center;color:#99a;padding:30px 0;font-size:15px}
+        .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+        .chip{background:transparent;border:2px solid #d6dce8;color:#1f2430;border-radius:20px;padding:6px 16px;cursor:pointer;font-size:13px;margin:0}
+        .chip.active{background:#3b5bdb;color:#fff;border-color:#3b5bdb}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР06 — Объекты JavaScript (To-Do менеджер)</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения — улучшенный менеджер задач</p>
+
+    <section class="card">
+        <h2>To-Do менеджер (с датой, localStorage, приоритетами и сроком)</h2>
+        <p class="hint">
+            Задачи хранятся в localStorage. Узел показывает: дату создания, приоритет (высокий/средний/низкий)
+            с сортировкой, срок выполнения с подсветкой просроченных задач.
+        </p>
+
+        <div class="todo-form">
+            <div class="inputs">
+                <input type="text" id="todo-input" placeholder="Новая задача...">
+                <select id="todo-priority">
+                    <option value="high">Высокий приоритет</option>
+                    <option value="medium" selected>Средний приоритет</option>
+                    <option value="low">Низкий приоритет</option>
+                </select>
+                <input type="datetime-local" id="todo-due" placeholder="Срок выполнения">
+                <button class="success" id="todo-add">➕ Добавить</button>
+            </div>
+        </div>
+
+        <div class="chips" id="todo-filters">
+            <button class="chip active" data-filter="all">Все</button>
+            <button class="chip" data-filter="active">Активные</button>
+            <button class="chip" data-filter="completed">Выполненные</button>
+            <button class="chip" data-filter="overdue">Просроченные</button>
+        </div>
+
+        <ul id="todo-list"></ul>
+
+        <div class="row">
+            <button class="danger" id="todo-clear">🗑 Очистить все</button>
+        </div>
+        <div class="output" id="todo-status"></div>
+    </section>
+
+    <script>
+        const STORAGE_KEY = 'pr06_todos';
+        let todos = [];
+        let nextId = 1;
+        let currentFilter = 'all';
+        const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+
+        function loadTodos() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    todos = JSON.parse(raw);
+                    nextId = todos.reduce((m, t) => Math.max(m, t.id), 0) + 1;
+                }
+            } catch (e) {
+                todos = [];
+            }
+            if (todos.length === 0) {
+                const now = new Date();
+                todos = [
+                    { id: 1, text: 'Изучить JavaScript', completed: false, priority: 'high', createdAt: now.toISOString(), due: null },
+                    { id: 2, text: 'Сделать лабораторную работу', completed: false, priority: 'medium', createdAt: now.toISOString(), due: null }
+                ];
+                nextId = 3;
+                saveTodos();
+            }
+        }
+
+        function saveTodos() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+
+        function addTask(text, priority, due) {
+            if (!text.trim()) {
+                setStatus('Введите текст задачи!');
+                return;
+            }
+            todos.push({
+                id: nextId++,
+                text: text.trim(),
+                completed: false,
+                priority: priority,
+                createdAt: new Date().toISOString(),
+                due: due || null
+            });
+            saveTodos();
+            document.getElementById('todo-input').value = '';
+            render();
+            setStatus('Задача добавлена: "' + text.trim() + '"');
+        }
+
+        function toggleTask(id) {
+            const t = todos.find(x => x.id === id);
+            if (t) {
+                t.completed = !t.completed;
+                saveTodos();
+                render();
+            }
+        }
+
+        function deleteTask(id) {
+            todos = todos.filter(x => x.id !== id);
+            saveTodos();
+            render();
+        }
+
+        function clearAll() {
+            todos = [];
+            saveTodos();
+            render();
+            setStatus('Все задачи удалены.');
+        }
+
+        function isOverdue(t) {
+            if (t.completed || !t.due) return false;
+            return new Date(t.due) < new Date();
+        }
+
+        function getFiltered() {
+            let list = todos.slice();
+            list.sort(function(a, b) {
+                if (PRIORITY_RANK[a.priority] !== PRIORITY_RANK[b.priority]) {
+                    return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+                }
+                return new Date(a.createdAt) - new Date(b.createdAt);
+            });
+            if (currentFilter === 'active') return list.filter(t => !t.completed);
+            if (currentFilter === 'completed') return list.filter(t => t.completed);
+            if (currentFilter === 'overdue') return list.filter(isOverdue);
+            return list;
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return day + '.' + month + '.' + year;
+        }
+
+        function fmtDue(due) {
+            if (!due) return '';
+            const d = new Date(due);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return day + '.' + month + '.' + year + ' ' + hh + ':' + mm;
+        }
+
+        function setStatus(msg) {
+            document.getElementById('todo-status').textContent = msg;
+        }
+
+        function render() {
+            const listEl = document.getElementById('todo-list');
+            const filtered = getFiltered();
+            listEl.innerHTML = '';
+
+            if (filtered.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'empty-todo';
+                li.textContent = 'Задач нет. Добавьте первую!';
+                listEl.appendChild(li);
+                return;
+            }
+
+            filtered.forEach(function(t) {
+                const li = document.createElement('li');
+                li.className = 'todo-item ' + t.priority;
+                if (isOverdue(t)) li.classList.add('overdue');
+                if (t.completed) li.classList.add('completed');
+
+                const check = document.createElement('input');
+                check.type = 'checkbox';
+                check.className = 'todo-check';
+                check.checked = t.completed;
+                check.addEventListener('change', function() { toggleTask(t.id); });
+
+                const body = document.createElement('div');
+                body.className = 'todo-body';
+
+                const text = document.createElement('div');
+                text.className = 'todo-text';
+                text.textContent = t.text;
+                text.addEventListener('click', function() { toggleTask(t.id); });
+
+                const meta = document.createElement('div');
+                meta.className = 'todo-meta';
+
+                const prio = document.createElement('span');
+                prio.className = 'priority ' + t.priority;
+                prio.textContent = 'приоритет: ' + t.priority;
+
+                const created = document.createElement('span');
+                created.className = 'todo-date-created';
+                created.textContent = 'создано: ' + fmtDate(t.createdAt);
+
+                body.appendChild(text);
+                meta.appendChild(prio);
+                meta.appendChild(created);
+
+                if (t.due) {
+                    const due = document.createElement('span');
+                    due.className = 'todo-due' + (isOverdue(t) ? ' overdue' : '');
+                    due.textContent = 'срок: ' + fmtDue(t.due) + (isOverdue(t) ? ' (просрочено)' : '');
+                    meta.appendChild(due);
+                }
+
+                body.appendChild(meta);
+
+                const actions = document.createElement('div');
+                actions.className = 'todo-actions';
+                const delBtn = document.createElement('button');
+                delBtn.className = 'danger';
+                delBtn.textContent = '✕';
+                delBtn.addEventListener('click', function() { deleteTask(t.id); });
+
+                actions.appendChild(delBtn);
+                li.appendChild(check);
+                li.appendChild(body);
+                li.appendChild(actions);
+                listEl.appendChild(li);
+            });
+
+            const total = todos.length;
+            const done = todos.filter(t => t.completed).length;
+            const overdueCount = todos.filter(isOverdue).length;
+            setStatus(
+                'Всего задач: ' + total +
+                ' | Выполнено: ' + done +
+                ' | Активных: ' + (total - done) +
+                ' | Просрочено: ' + overdueCount
+            );
+        }
+
+        document.getElementById('todo-add').addEventListener('click', function() {
+            const input = document.getElementById('todo-input');
+            const priority = document.getElementById('todo-priority').value;
+            const due = document.getElementById('todo-due').value;
+            const text = input.value;
+            addTask(text, priority, due);
+        });
+
+        document.getElementById('todo-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('todo-add').click();
+            }
+        });
+
+        document.getElementById('todo-clear').addEventListener('click', function() {
+            if (todos.length === 0) return;
+            clearAll();
+        });
+
+        document.querySelectorAll('#todo-filters .chip').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#todo-filters .chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                render();
+            });
+        });
+
+        loadTodos();
+        render();
+    </script>
+</body>
+</html>

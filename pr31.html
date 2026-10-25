@@ -1,0 +1,348 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ПР31 — React: формы, списки</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f0f2f5;color:#212529}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e0e0e0}
+  .topbar h1{margin:0;font-size:20px;color:#1c2333}
+  .topbar .back{color:#3b5bdb;text-decoration:none;font-size:14px;font-weight:600}
+  .wrap{max-width:820px;margin:24px auto;padding:0 16px}
+  .task{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:22px 24px;margin-bottom:22px}
+  .task h2{margin:0 0 14px;font-size:18px;color:#3b5bdb;border-bottom:2px solid #eef1f8;padding-bottom:10px}
+  .calcForm{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .field label{display:block;font-size:13px;color:#666;font-weight:600;margin-bottom:5px}
+  input,select{padding:10px 12px;font-size:16px;border:2px solid #dfe2ea;border-radius:8px;outline:none}
+  input:focus,select:focus{border-color:#3b5bdb}
+  select{background:#fff;cursor:pointer}
+  button{padding:10px 18px;font-size:14px;border:none;border-radius:8px;cursor:pointer;color:#fff;background:#3b5bdb}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{background:#c8ccd8;cursor:not-allowed}
+  .btn-green{background:#2f9e44}.btn-red{background:#e03131}.btn-gray{background:#868e96}.btn-orange{background:#f08c00}.btn-teal{background:#0c8599}
+  .resultOk{background:#e6f7eb;border:1px solid #b8ecbe;border-radius:8px;padding:14px 18px;margin-top:12px;font-size:18px}
+  .errorBox{background:#ffe3e3;border:1px solid #ffc9c9;color:#c92a2a;border-radius:8px;padding:12px 14px;margin-top:12px}
+  .pad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;max-width:280px}
+  .pad button{padding:12px;font-size:17px}
+  .pad .eq{grid-column:span 1}
+  .hist{list-style:none;padding:0;margin:12px 0 0;max-height:180px;overflow:auto}
+  .hist li{background:#f8f9fc;border:1px solid #e6e9f2;border-radius:6px;padding:8px 12px;margin-bottom:5px;font-size:14px;display:flex;justify-content:space-between}
+  .memRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  .memRow button{padding:7px 12px;font-size:13px}
+  .memVal{font-weight:700;color:#495057}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .sciGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:420px;margin-top:10px}
+  .exprBar{background:#f8f9fc;border:1px solid #e6e9f2;border-radius:8px;padding:12px;font-family:monospace;font-size:16px;min-height:30px;margin-bottom:8px}
+  .activeField{outline:3px solid #3b5bdb}
+</style></head><body>
+<div class="topbar"><h1>ПР31 — React: формы, списки (калькулятор)</h1><a class="back" href="index.html">← Все работы</a></div>
+<div id="root"></div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function BaseCalculator({ extraOps }) {
+  const ops = [ ...(extraOps || []) ];
+  const [num1, setNum1] = useState('');
+  const [num2, setNum2] = useState('');
+  const [operation, setOperation] = useState('+');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [history, setHistory] = useState([]);
+
+  const symbol = (op) => ({ '+': '+', '-': '−', '*': '×', '/': '÷', '%': '%', '^': '^' }[op] || op);
+
+  const calculate = () => {
+    if (num1 === '' || num2 === '') { setError('Введите оба числа'); setResult(null); return; }
+    const a = parseFloat(num1), b = parseFloat(num2);
+    if (isNaN(a) || isNaN(b)) { setError('Введите корректные числа'); setResult(null); return; }
+    let r, s;
+    switch (operation) {
+      case '+': r = a + b; s = '+'; break;
+      case '-': r = a - b; s = '−'; break;
+      case '*': r = a * b; s = '×'; break;
+      case '/':
+        if (b === 0) { setError('На ноль делить нельзя!'); setResult(null); return; }
+        r = a / b; s = '÷'; break;
+      case '%':
+        if (b === 0) { setError('На ноль делить нельзя!'); setResult(null); return; }
+        r = a % b; s = '%'; break;
+      case '^': r = Math.pow(a, b); s = '^'; break;
+      default: setError('Неизвестная операция'); setResult(null); return;
+    }
+    if (!Number.isFinite(r)) { setError('Результат слишком большой'); setResult(null); return; }
+    const rounded = Math.round(r * 1e10) / 1e10;
+    setResult(rounded); setError('');
+    setHistory(prev => [{ id: Date.now(), text: `${a} ${s} ${b} = ${rounded}`, time: new Date().toLocaleTimeString() }, ...prev].slice(0, 20));
+  };
+
+  const reset = () => { setNum1(''); setNum2(''); setResult(null); setError(''); };
+  const change = (fn, v) => { fn(v); setResult(null); setError(''); };
+
+  useEffect(() => {
+    const hk = (e) => {
+      if (e.key === 'Escape') reset();
+    };
+    window.addEventListener('keydown', hk);
+    return () => window.removeEventListener('keydown', hk);
+  }, []);
+
+  return (
+    <div>
+      <form className="calcForm" onSubmit={e => { e.preventDefault(); calculate(); }}>
+        <div className="field"><label>Число 1</label>
+          <input type="number" step="any" value={num1} onChange={e => change(setNum1, e.target.value)} /></div>
+        <div className="field"><label>Операция</label>
+          <select value={operation} onChange={e => change(setOperation, e.target.value)}>
+            <option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option>
+            <option value="%">% (остаток)</option><option value="^">^ (степень)</option>
+          </select></div>
+        <div className="field"><label>Число 2</label>
+          <input type="number" step="any" value={num2} onChange={e => change(setNum2, e.target.value)} /></div>
+        <div className="field"><button type="submit" className="btn-green">= Вычислить</button></div>
+        <div className="field"><button type="button" className="btn-gray" onClick={reset}>Сброс</button></div>
+      </form>
+      {error && <div className="errorBox">⚠️ {error}</div>}
+      {result !== null && !error && <div className="resultOk">{parseFloat(num1)} {symbol(operation)} {parseFloat(num2)} = <b>{result}</b></div>}
+      <ul className="hist">
+        {history.map(h => <li key={h.id}><span>{h.text}</span><span style={{ color: '#999', fontSize: 12 }}>{h.time}</span></li>)}
+      </ul>
+    </div>
+  );
+}
+
+function PadCalculator() {
+  const [active, setActive] = useState('num1');
+  const [num1, setNum1] = useState('');
+  const [num2, setNum2] = useState('');
+  const [operation, setOperation] = useState('+');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+
+  const append = (v) => {
+    const setter = active === 'num1' ? setNum1 : setNum2;
+    setter(prev => prev + v); setResult(null); setError('');
+  };
+  const calc = () => {
+    const a = parseFloat(num1), b = parseFloat(num2);
+    if (isNaN(a) || isNaN(b)) { setError('Введите оба числа'); setResult(null); return; }
+    let r;
+    switch (operation) {
+      case '+': r = a + b; break;
+      case '-': r = a - b; break;
+      case '*': r = a * b; break;
+      case '/': if (b === 0) { setError('На ноль делить нельзя!'); setResult(null); return; } r = a / b; break;
+      default: r = null;
+    }
+    setResult(Math.round(r * 1e10) / 1e10); setError('');
+  };
+  const clearField = () => { (active === 'num1' ? setNum1 : setNum2)(''); setResult(null); };
+  const keys = ['7','8','9','/','4','5','6','*','1','2','3','-','0','.','C','+'];
+  const handleKey = (k) => {
+    if (k === 'C') clearField();
+    else if (k === '=') calc();
+    else if (k === '+' || k === '-' || k === '*' || k === '/') setOperation(k);
+    else append(k);
+  };
+
+  const setOp = (op) => { setOperation(op); setResult(null); };
+
+  return (
+    <div>
+      <div className="calcForm">
+        <div className="field"><label>Число 1</label>
+          <input disabled={active !== 'num1'} className={active === 'num1' ? 'activeField' : ''} value={num1} readOnly /></div>
+        <div className="field"><label>Операция</label>
+          <select value={operation} onChange={e => setOp(e.target.value)}>
+            <option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option></select>
+        </div>
+        <div className="field"><label>Число 2</label>
+          <input disabled={active !== 'num2'} className={active === 'num2' ? 'activeField' : ''} value={num2} readOnly /></div>
+        <div className="field">
+          <button className="btn-gray" onClick={() => setActive(active === 'num1' ? 'num2' : 'num1')}>Поле: {active === 'num1' ? '№1' : '№2'}</button>
+        </div>
+      </div>
+      <div className="pad">
+        {keys.map(k => <button key={k} className={k === '/' || k === '*' ? 'btn-orange' : ''} onClick={() => handleKey(k)}>{k}</button>)}
+        <button className="eq btn-green" onClick={calc}>=</button>
+      </div>
+      {error && <div className="errorBox">⚠️ {error}</div>}
+      {result !== null && !error && <div className="resultOk">Результат: <b>{result}</b></div>}
+    </div>
+  );
+}
+
+function BaseConverter() {
+  const [base, setBase] = useState(10);
+  const [num1, setNum1] = useState('');
+  const [num2, setNum2] = useState('');
+  const [operation, setOperation] = useState('+');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+
+  const calc = () => {
+    const a = parseInt(num1, base), b = parseInt(num2, base);
+    if (isNaN(a) || isNaN(b)) { setError('Неверный ввод для выбранной системы'); setResult(''); return; }
+    let r;
+    switch (operation) {
+      case '+': r = a + b; break;
+      case '-': r = a - b; break;
+      case '*': r = a * b; break;
+      case '/': if (b === 0) { setError('На ноль делить нельзя!'); setResult(''); return; } r = a / b; break;
+      default: r = 0;
+    }
+    setError('');
+    setResult(r.toString(base).toUpperCase());
+  };
+
+  return (
+    <div>
+      <div className="calcForm">
+        <div className="field"><label>Система</label>
+          <select value={base} onChange={e => { setBase(Number(e.target.value)); setResult(''); setError(''); }}>
+            <option value={2}>BIN</option><option value={8}>OCT</option><option value={10}>DEC</option><option value={16}>HEX</option>
+          </select></div>
+        <div className="field"><label>Число 1</label><input value={num1} onChange={e => setNum1(e.target.value)} placeholder="напр. FF" /></div>
+        <div className="field"><label>Операция</label>
+          <select value={operation} onChange={e => setOperation(e.target.value)}>
+            <option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option></select></div>
+        <div className="field"><label>Число 2</label><input value={num2} onChange={e => setNum2(e.target.value)} /></div>
+        <div className="field"><button className="btn-green" onClick={calc}>= Вычислить</button></div>
+      </div>
+      {error && <div className="errorBox">⚠️ {error}</div>}
+      {!error && result !== '' && <div className="resultOk">Результат ({['','','BIN','','OCT','','','','DEC','','','','','','','HEX'][base]}): <b>{result}</b></div>}
+    </div>
+  );
+}
+
+function MemoryCalc() {
+  const [num1, setNum1] = useState('');
+  const [num2, setNum2] = useState('');
+  const [operation, setOperation] = useState('+');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [memory, setMemory] = useState(0);
+
+  const calc = () => {
+    const a = parseFloat(num1), b = parseFloat(num2);
+    if (isNaN(a) || isNaN(b)) { setError('Введите оба числа'); setResult(null); return; }
+    let r;
+    switch (operation) {
+      case '+': r = a + b; break;
+      case '-': r = a - b; break;
+      case '*': r = a * b; break;
+      case '/': if (b === 0) { setError('На ноль делить нельзя!'); setResult(null); return; } r = a / b; break;
+      default: r = 0;
+    }
+    setResult(Math.round(r * 1e10) / 1e10); setError('');
+  };
+  const reset = () => { setNum1(''); setNum2(''); setResult(null); setError(''); };
+
+  return (
+    <div>
+      <div className="calcForm">
+        <div className="field"><label>Число 1</label><input type="number" value={num1} onChange={e => setNum1(e.target.value)} /></div>
+        <div className="field"><label>Операция</label>
+          <select value={operation} onChange={e => setOperation(e.target.value)}>
+            <option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option></select></div>
+        <div className="field"><label>Число 2</label><input type="number" value={num2} onChange={e => setNum2(e.target.value)} /></div>
+        <div className="field"><button className="btn-green" onClick={calc}>Вычислить</button></div>
+        <div className="field"><button className="btn-gray" onClick={reset}>Сброс</button></div>
+      </div>
+      {error && <div className="errorBox">⚠️ {error}</div>}
+      {result !== null && !error && <div className="resultOk">Результат: <b>{result}</b></div>}
+      <div className="memRow">
+        <button onClick={() => result !== null && setMemory(prev => prev + result)}>M+</button>
+        <button onClick={() => result !== null && setMemory(prev => prev - result)}>M−</button>
+        <button onClick={() => { setResult(memory); setError(''); }}>MR</button>
+        <button onClick={() => setMemory(0)}>MC</button>
+        <span className="memVal">Память: {memory}</span>
+      </div>
+    </div>
+  );
+}
+
+function SciCalc() {
+  const [expr, setExpr] = useState('');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+
+  const add = (t) => { setExpr(prev => prev + t); setError(''); };
+  const fact = (n) => { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; };
+
+  const evalExpr = () => {
+    try {
+      let s = expr;
+      s = s.replace(/π/g, Math.PI).replace(/e\b(?![a-z])/g, Math.E).replace(/\^/g, '**');
+      s = s.replace(/sin\(/g, 'Math.sin(').replace(/cos\(/g, 'Math.cos(').replace(/tan\(/g, 'Math.tan(');
+      s = s.replace(/log\(/g, (m) => { return 'Math.log10('; }).replace(/ln\(/g, 'Math.log(');
+      const match = s.match(/(\d+)!/);
+      if (match) s = s.replace(match[0], fact(parseInt(match[1])));
+      const val = Function(`"use strict"; return (${s})`)();
+      if (isNaN(val)) throw new Error();
+      setResult('= ' + Math.round(val * 1e8) / 1e8);
+      setError('');
+    } catch (e) { setError('Ошибка выражения'); setResult(''); }
+  };
+
+  const sciKeys = [
+    ['sin(', 'cos(', 'tan(', 'π', 'e'],
+    ['log(', 'ln(', '√', '^', '!'],
+    ['(', ')', '7', '8', '9'],
+    ['4', '5', '6', '+', '-'],
+    ['1', '2', '3', '*', '/'],
+    ['0', '.', 'C', '=', 'AC']
+  ];
+
+  return (
+    <div>
+      <div className="exprBar" style={{ fontSize: 20 }}>{expr || 'Введите выражение'}</div>
+      {result && <div className="resultOk">{result}</div>}
+      {error && <div className="errorBox">⚠️ {error}</div>}
+      <div className="sciGrid">
+        {sciKeys.flat().map(k => (
+          <button key={k + Math.random()} style={{ fontSize: 15 }} onClick={() => {
+            if (k === 'C') setExpr(prev => prev.slice(0, -1));
+            else if (k === 'AC') { setExpr(''); setResult(''); setError(''); }
+            else if (k === '=') evalExpr();
+            else if (k === '√') add('Math.sqrt(');
+            else add(k);
+          }}>{k}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="wrap">
+      <div className="task">
+        <h2>Задание 1–2: Операции «%» и «^» + история</h2>
+        <p style={{ color: '#495057' }}>Калькулятор поддерживает остаток от деления и возведение в степень, деление на ноль обрабатывается, история сохраняется. Esc сбрасывает форму.</p>
+        <BaseCalculator />
+      </div>
+      <div className="task">
+        <h2>Задание 4: Цифровая клавиатура</h2>
+        <p style={{ color: '#495057' }}>Кнопки 0–9, «.» и операции вводят в активное поле (переключается кнопкой). «C» очищает активное поле.</p>
+        <PadCalculator />
+      </div>
+      <div className="task">
+        <h2>Задание 5: Конвертация систем счисления</h2>
+        <p style={{ color: '#495057' }}>Ввод и результат в DEC, BIN, HEX, OCT (например, FF in HEX + 1 = 100).</p>
+        <BaseConverter />
+      </div>
+      <div className="task">
+        <h2>Задание 6: Память калькулятора (M+/M−/MR/MC)</h2>
+        <MemoryCalc />
+      </div>
+      <div className="task">
+        <h2>Задание 7: Научный калькулятор</h2>
+        <p style={{ color: '#495057' }}>sin, cos, tan, log, ln, √, факториал (!), константы π и e, скобки.</p>
+        <SciCalc />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

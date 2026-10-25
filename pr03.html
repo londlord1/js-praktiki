@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР03 — Массивы и операции с ними</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+        .subtask{margin:10px 0;padding:10px;background:#f6f8fc;border-radius:8px}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР03 — Массивы и операции с ними</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения</p>
+
+    <section class="card">
+        <h2>Задание 1: Работа с числами</h2>
+        <div class="subtask">
+            <p class="hint"><strong>Исходный массив чисел:</strong> [12, 7, 23, 45, 18, 31, 6, 42, 19, 8]</p>
+            <button onclick="runGetPrimes()">Проcтые числа (getPrimes)</button>
+            <button onclick="runGetSquares()">Квадраты чисел (getSquares)</button>
+            <button onclick="runGetProduct()">Произведение (getProduct)</button>
+        </div>
+        <div class="output" id="pr03-num-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 2: Работа со строками</h2>
+        <div class="subtask">
+            <p class="hint"><strong>Массив слов:</strong> [яблоко, банан, апельсин, груша, киви, манго, ананас]</p>
+            <button onclick="runGetLongestWord()">Самое длинное слово</button>
+            <button onclick="runGetShortestWord()">Самое короткое слово</button>
+            <button onclick="runCountWordsByLength()">Группировка по длине</button>
+        </div>
+        <div class="output" id="pr03-str-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 3: Работа с объектами</h2>
+        <div class="subtask">
+            <p class="hint"><strong>Массив студентов:</strong> Алексей(ИС-201), Мария(ИС-202), Иван(ИС-201), Екатерина(ИС-203), Дмитрий(ИС-201), Анна(ИС-202)</p>
+            <div class="row">
+                <select id="pr03-group-select">
+                    <option value="">Группа (для поиска)</option>
+                    <option>ИС-201</option>
+                    <option>ИС-202</option>
+                    <option>ИС-203</option>
+                </select>
+                <button onclick="runFindByGroup()">Найти по группе</button>
+                <input type="number" id="pr03-student-id" placeholder="ID (для правки)" style="width:150px">
+                <input type="text" id="pr03-new-grade" placeholder="Новая оценка" style="width:140px">
+                <button onclick="runUpdateStudent()">Обновить студента</button>
+                <input type="number" id="pr03-del-id" placeholder="ID (для удаления)" style="width:150px">
+                <button class="danger" onclick="runDeleteStudent()">Удалить студента</button>
+            </div>
+        </div>
+        <div class="output" id="pr03-obj-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 4: Комбинированные задачи</h2>
+        <div class="subtask">
+            <button onclick="runGetTopStudentInGroup()">Лучший студент в каждой группе</button>
+            <button onclick="runGetAgeDistribution()">Распределение по возрасту</button>
+            <div class="row">
+                <input type="number" id="pr03-passing-threshold" placeholder="Порог оценки (укажите, например 80)" style="width:200px" value="80">
+                <button onclick="runGetPassingStudents()">Студенты выше порога</button>
+            </div>
+        </div>
+        <div class="output" id="pr03-combo-output"></div>
+    </section>
+
+    <script>
+        const numbersArr = [12, 7, 23, 45, 18, 31, 6, 42, 19, 8];
+        const wordsArr = ["яблоко", "банан", "апельсин", "груша", "киви", "манго", "ананас"];
+        let studentsArr = [
+            { id: 1, name: "Алексей", age: 20, group: "ИС-201", grade: 85 },
+            { id: 2, name: "Мария", age: 19, group: "ИС-202", grade: 92 },
+            { id: 3, name: "Иван", age: 21, group: "ИС-201", grade: 78 },
+            { id: 4, name: "Екатерина", age: 20, group: "ИС-203", grade: 95 },
+            { id: 5, name: "Дмитрий", age: 22, group: "ИС-201", grade: 67 },
+            { id: 6, name: "Анна", age: 19, group: "ИС-202", grade: 88 }
+        ];
+
+        function isPrime(n) {
+            if (n <= 1) return false;
+            for (let i = 2; i * i <= n; i++) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+
+        function getPrimes() {
+            return numbersArr.filter(isPrime);
+        }
+
+        function getSquares() {
+            return numbersArr.map(n => n * n);
+        }
+
+        function getProduct() {
+            return numbersArr.reduce((acc, n) => acc * n, 1);
+        }
+
+        function runGetPrimes() {
+            const out = document.getElementById('pr03-num-output');
+            out.textContent = 'Массив: [' + numbersArr.join(', ') + ']\n\n' +
+                'Простые числа (getPrimes): [' + getPrimes().join(', ') + ']';
+        }
+
+        function runGetSquares() {
+            const out = document.getElementById('pr03-num-output');
+            const squares = getSquares();
+            out.textContent = 'Массив: [' + numbersArr.join(', ') + ']\n\nКвадраты (getSquares):\n' +
+                squares.map((s, i) => numbersArr[i] + '² = ' + s).join('\n');
+        }
+
+        function runGetProduct() {
+            const out = document.getElementById('pr03-num-output');
+            out.textContent = 'Массив: [' + numbersArr.join(', ') + ']\n\n' +
+                'Произведение всех чисел (getProduct) = ' + getProduct();
+        }
+
+        function getLongestWord() {
+            let longest = wordsArr[0];
+            for (let word of wordsArr) {
+                if (word.length > longest.length) longest = word;
+            }
+            return longest;
+        }
+
+        function getShortestWord() {
+            let shortest = wordsArr[0];
+            for (let word of wordsArr) {
+                if (word.length < shortest.length) shortest = word;
+            }
+            return shortest;
+        }
+
+        function countWordsByLength() {
+            const groups = {};
+            for (let word of wordsArr) {
+                const len = word.length;
+                if (!groups[len]) groups[len] = [];
+                groups[len].push(word);
+            }
+            return groups;
+        }
+
+        function runGetLongestWord() {
+            const out = document.getElementById('pr03-str-output');
+            const longest = getLongestWord();
+            out.textContent = 'Массив слов: [' + wordsArr.join(', ') + ']\n\n' +
+                'Самое длинное слово: "' + longest + '" (длина ' + longest.length + ' символов)';
+        }
+
+        function runGetShortestWord() {
+            const out = document.getElementById('pr03-str-output');
+            const shortest = getShortestWord();
+            out.textContent = 'Массив слов: [' + wordsArr.join(', ') + ']\n\n' +
+                'Самое короткое слово: "' + shortest + '" (длина ' + shortest.length + ' символов)';
+        }
+
+        function runCountWordsByLength() {
+            const out = document.getElementById('pr03-str-output');
+            const groups = countWordsByLength();
+            let text = 'Группировка слов по длине:\n\n';
+            for (let len in groups) {
+                text += len + ' букв: ' + groups[len].join(', ') + '\n';
+            }
+            out.textContent = text;
+        }
+
+        function findByGroup(group) {
+            return studentsArr.filter(s => s.group === group);
+        }
+
+        function updateStudent(id, newData) {
+            const idx = studentsArr.findIndex(s => s.id === id);
+            if (idx === -1) return null;
+            studentsArr[idx] = Object.assign({}, studentsArr[idx], newData);
+            return studentsArr[idx];
+        }
+
+        function deleteStudent(id) {
+            const idx = studentsArr.findIndex(s => s.id === id);
+            if (idx === -1) return null;
+            const removed = studentsArr[idx];
+            studentsArr.splice(idx, 1);
+            return removed;
+        }
+
+        function getTopStudentInGroup() {
+            const groups = {};
+            for (let s of studentsArr) {
+                if (!groups[s.group]) groups[s.group] = [];
+                groups[s.group].push(s);
+            }
+            const top = {};
+            for (let g in groups) {
+                let best = groups[g][0];
+                for (let s of groups[g]) {
+                    if (s.grade > best.grade) best = s;
+                }
+                top[g] = best;
+            }
+            return top;
+        }
+
+        function getAgeDistribution() {
+            const dist = {};
+            for (let s of studentsArr) {
+                if (!dist[s.age]) dist[s.age] = 0;
+                dist[s.age]++;
+            }
+            return dist;
+        }
+
+        function getPassingStudents(threshold) {
+            return studentsArr.filter(s => s.grade > threshold);
+        }
+
+        function fmtStudents(list) {
+            return list.map(s => s.id + '. ' + s.name + ' (гр. ' + s.group + ', ' + s.age + ' лет, оценка ' + s.grade + ')').join('\n');
+        }
+
+        function runFindByGroup() {
+            const out = document.getElementById('pr03-obj-output');
+            const group = document.getElementById('pr03-group-select').value;
+            if (!group) {
+                out.textContent = 'Выберите группу для поиска.';
+                return;
+            }
+            const found = findByGroup(group);
+            out.textContent = 'Студенты группы ' + group + ' (' + found.length + '):\n\n' + fmtStudents(found);
+        }
+
+        function runUpdateStudent() {
+            const out = document.getElementById('pr03-obj-output');
+            const id = parseInt(document.getElementById('pr03-student-id').value);
+            const grade = parseFloat(document.getElementById('pr03-new-grade').value);
+            if (isNaN(id) || isNaN(grade)) {
+                out.textContent = 'Введите ID студента и новую оценку.';
+                return;
+            }
+            const updated = updateStudent(id, { grade: grade });
+            if (updated) {
+                out.textContent = 'Студент обновлён:\n' + fmtStudents([updated]);
+            } else {
+                out.textContent = 'Студент с ID ' + id + ' не найден.';
+            }
+        }
+
+        function runDeleteStudent() {
+            const out = document.getElementById('pr03-obj-output');
+            const id = parseInt(document.getElementById('pr03-del-id').value);
+            if (isNaN(id)) {
+                out.textContent = 'Введите ID студента для удаления.';
+                return;
+            }
+            const removed = deleteStudent(id);
+            if (removed) {
+                out.textContent = 'Удалён студент:\n' + fmtStudents([removed]) +
+                    '\n\nОставшиеся студенты (' + studentsArr.length + '):\n' + fmtStudents(studentsArr);
+            } else {
+                out.textContent = 'Студент с ID ' + id + ' не найден.';
+            }
+        }
+
+        function runGetTopStudentInGroup() {
+            const out = document.getElementById('pr03-combo-output');
+            const top = getTopStudentInGroup();
+            let text = 'Лучший студент в каждой группе:\n\n';
+            for (let g in top) {
+                text += g + ': ' + top[g].name + ' (оценка ' + top[g].grade + ')\n';
+            }
+            out.textContent = text;
+        }
+
+        function runGetAgeDistribution() {
+            const out = document.getElementById('pr03-combo-output');
+            const dist = getAgeDistribution();
+            let text = 'Распределение студентов по возрасту:\n\n';
+            for (let age in dist) {
+                text += age + ' лет: ' + dist[age] + ' чел.\n';
+            }
+            out.textContent = text;
+        }
+
+        function runGetPassingStudents() {
+            const out = document.getElementById('pr03-combo-output');
+            const threshold = parseFloat(document.getElementById('pr03-passing-threshold').value);
+            if (isNaN(threshold)) {
+                out.textContent = 'Введите порог оценки.';
+                return;
+            }
+            const passing = getPassingStudents(threshold);
+            out.textContent = 'Студенты с оценкой выше ' + threshold + ' (' + passing.length + '):\n\n' +
+                fmtStudents(passing);
+        }
+    </script>
+</body>
+</html>

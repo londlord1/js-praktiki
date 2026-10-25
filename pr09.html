@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР09 — Обработка событий</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+
+.drag-area{width:140px;height:140px;background:#3b5bdb;color:#fff;display:flex;align-items:center;justify-content:center;border-radius:12px;font-weight:bold;user-select:none;cursor:grab;position:relative}
+#customMenu{display:none;position:fixed;background:#fff;border:1px solid #c9d1e0;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:999;min-width:160px;overflow:hidden}
+#customMenu button{display:block;width:100%;text-align:left;background:none;color:#1f2430;border:none;padding:10px 14px;margin:0;border-radius:0;font-size:14px}
+#customMenu button:hover{background:#eef1f8}
+.task-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e2e6ef;border-radius:8px;margin-bottom:6px}
+.task-item.hidden{display:none}
+.activity-timer{font-size:28px;font-weight:bold;color:#3b5bdb}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР09 — Обработка событий</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Обработка событий с использованием JavaScript.</div>
+
+<section class="card">
+    <h2>Задание 1: Кастомное контекстное меню</h2>
+    <p class="hint">Заблокируйте стандартное контекстное меню на всей странице. Кликните правой кнопкой мыши по области ниже — появится собственное меню.</p>
+    <div id="demoArea" style="border:2px dashed #3b5bdb;border-radius:8px;padding:30px;text-align:center;color:#667;cursor:context-menu;">
+        Кликни правой кнопкой мыши по этой области
+    </div>
+    <div id="customMenu">
+        <button data-action="copy">📋 Скопировать текст</button>
+        <button data-action="select">🎯 Выделить область</button>
+        <button data-action="refresh" class="danger">🔄 Обновить</button>
+    </div>
+    <div class="output" id="menuOutput">Правый клик пока не был выполнен.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 2: Drag &amp; Drop (перетаскивание)</h2>
+    <p class="hint">Перетащите квадрат мышью по странице. Используются события mousedown, mousemove, mouseup.</p>
+    <div class="drag-area" id="dragBox">🖐 Перетащи</div>
+    <div class="output" id="dragOutput">Позиция: x — , y —</div>
+</section>
+
+<section class="card">
+    <h2>Задание 3: Фильтр списка задач</h2>
+    <p class="hint">Введите текст — список задач отфильтруется по мере ввода (событие input).</p>
+    <input type="text" id="filterInput" placeholder="Фильтровать задачи...">
+    <ul id="taskList" style="list-style:none;padding:0;margin-top:10px;">
+        <li class="task-item">Изучить события JavaScript</li>
+        <li class="task-item">Написать практическую работу</li>
+        <li class="task-item">Сделать перерыв</li>
+        <li class="task-item">Разобраться с делегированием</li>
+        <li class="task-item">Подготовиться к защите</li>
+    </ul>
+    <div class="output" id="filterOutput">Найдено задач: 5</div>
+</section>
+
+<section class="card">
+    <h2>Задание 4: Таймер активности</h2>
+    <p class="hint">Показывает, сколько времени прошло с последнего действия пользователя (движение мыши или нажатие клавиши).</p>
+    <div class="activity-timer" id="activityTimer">0.0 с</div>
+    <button id="resetTimerBtn" class="danger">Сбросить таймер</button>
+    <div class="output" id="activityLog">Ожидание действий пользователя...</div>
+</section>
+
+<script>
+(function () {
+    // Простая запись в output-блоки по событиям
+    /*** Задание 1: Кастомное контекстное меню ***/
+    const demoArea = document.getElementById('demoArea');
+    const customMenu = document.getElementById('customMenu');
+    const menuOutput = document.getElementById('menuOutput');
+
+    demoArea.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+        customMenu.style.display = 'block';
+        customMenu.style.left = e.clientX + 'px';
+        customMenu.style.top = e.clientY + 'px';
+        demoArea.style.borderColor = '#28a745';
+        menuOutput.textContent = 'Контекстное меню открыто в точке (' + e.clientX + ', ' + e.clientY + ')';
+    });
+
+    customMenu.addEventListener('click', function (e) {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const messages = {
+            copy: 'Выполнено действие: Скопировать текст',
+            select: 'Выполнено действие: Выделить область',
+            refresh: 'Выполнено действие: Обновить'
+        };
+        menuOutput.textContent = messages[action] || 'Действие: ' + action;
+        customMenu.style.display = 'none';
+        demoArea.style.borderColor = '#3b5bdb';
+    });
+
+    document.addEventListener('click', function () {
+        customMenu.style.display = 'none';
+        demoArea.style.borderColor = '#3b5bdb';
+    });
+
+    document.addEventListener('contextmenu', function (e) {
+        if (!customMenu.contains(e.target) && e.target !== demoArea) {
+            e.preventDefault();
+            customMenu.style.display = 'none';
+            demoArea.style.borderColor = '#3b5bdb';
+        }
+    });
+
+    /*** Задание 2: Drag & Drop ***/
+    const dragBox = document.getElementById('dragBox');
+    const dragOutput = document.getElementById('dragOutput');
+
+    dragBox.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        let offsetX = e.clientX - dragBox.offsetLeft;
+        let offsetY = e.clientY - dragBox.offsetTop;
+
+        function onMove(ev) {
+            dragBox.style.left = (ev.clientX - offsetX) + 'px';
+            dragBox.style.top = (ev.clientY - offsetY) + 'px';
+            dragOutput.textContent = 'Позиция: x — ' + (ev.clientX - offsetX) + ', y — ' + (ev.clientY - offsetY);
+        }
+
+        function onUp() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            dragBox.style.cursor = 'grab';
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        dragBox.style.cursor = 'grabbing';
+    });
+
+    /*** Задание 3: Фильтр списка задач ***/
+    const filterInput = document.getElementById('filterInput');
+    const taskList = document.getElementById('taskList');
+    const filterOutput = document.getElementById('filterOutput');
+    const tasks = Array.from(taskList.children);
+
+    filterInput.addEventListener('input', function () {
+        const query = this.value.toLowerCase().trim();
+        let visible = 0;
+        tasks.forEach(function (li) {
+            const matches = li.textContent.toLowerCase().includes(query);
+            li.classList.toggle('hidden', !matches);
+            if (matches) visible++;
+        });
+        filterOutput.textContent = 'Найдено задач: ' + visible;
+    });
+
+    /*** Задание 4: Таймер активности ***/
+    const activityTimer = document.getElementById('activityTimer');
+    const activityLog = document.getElementById('activityLog');
+    const resetTimerBtn = document.getElementById('resetTimerBtn');
+
+    let lastActivity = Date.now();
+    let lastWholeSecond = 0;
+
+    function formatTime(ms) {
+        const sec = ms / 1000;
+        return sec.toFixed(1) + ' с';
+    }
+
+    setInterval(function () {
+        const elapsed = Date.now() - lastActivity;
+        activityTimer.textContent = formatTime(elapsed);
+        const whole = Math.floor(elapsed / 1000);
+        if (whole > 0 && whole !== lastWholeSecond && whole % 5 === 0) {
+            lastWholeSecond = whole;
+            activityLog.textContent = 'Бездействие: ' + whole + ' с';
+        }
+    }, 100);
+
+    function markActivity() {
+        lastActivity = Date.now();
+        lastWholeSecond = 0;
+        activityLog.textContent = 'Активность пользователя зафиксирована (' + new Date().toLocaleTimeString() + ')';
+    }
+
+    document.addEventListener('mousemove', markActivity);
+    document.addEventListener('keydown', markActivity);
+
+    resetTimerBtn.addEventListener('click', function () {
+        lastActivity = Date.now();
+        lastWholeSecond = 0;
+        activityTimer.textContent = '0.0 с';
+        activityLog.textContent = 'Таймер сброшен';
+    });
+})();
+</script>
+</body>
+</html>

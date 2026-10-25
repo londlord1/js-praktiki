@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР18 — Создание расширения браузера</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+button.green{background:#4CAF50}
+button.blue{background:#2196F3}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.page-preview{background:#fff;color:#222;border:1px solid #c9d1e0;border-radius:10px;padding:20px;margin-top:10px;transition:background-color .5s,color .5s}
+.page-preview.dark{background:#1a1a1a;color:#fff}
+.badge{display:inline-block;background:#eef;color:#334;border-radius:12px;padding:2px 10px;font-size:12px;margin-left:6px}
+.tabs-sim{font-family:monospace;font-size:13px;background:#f4f6fb;border-radius:8px;padding:10px;margin-top:8px}
+.tab{display:inline-block;background:#dfe5f2;border-radius:6px 6px 0 0;padding:5px 12px;margin-right:4px}
+.tab.active{background:#fff;border:1px solid #c9d1e0;border-bottom:none}
+.content-script-result{font-family:monospace;font-size:13px;background:#f4f6fb;border-radius:8px;padding:10px;margin-top:8px;min-height:40px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ПР18 — Создание расширения браузера</h1>
+  <a class="back" href="index.html">← Все работы</a>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Расширение не может работать в одном HTML-файле, поэтому здесь реализована интерактивная имитация логики расширения (popup, вкладки, настройки) на странице.</div>
+
+<section class="card">
+  <h2>Задание 1: Измените приветствие</h2>
+  <p>Текст всплывающего окна с &laquo;Hello, World! 🌍&raquo; изменён на своё приветствие.</p>
+  <div class="row">
+    <button class="green" id="helloBtn">Сказать &laquo;Привет, студент! 👋&raquo;</button>
+  </div>
+  <div class="output" id="out1">Приветствие показывается здесь (имитирует alert страницы вкладки).</div>
+</section>
+
+<section class="card">
+  <h2>Задание 2: Добавьте новую кнопку (синий фон)</h2>
+  <p>Четвёртая кнопка в popup меняет фон активной вкладки на синий.</p>
+  <div class="row">
+    <button class="blue" id="blueBtn">Синий фон</button>
+    <button id="resetBgBtn">Сбросить фон</button>
+  </div>
+  <p class="hint">Нажмите &laquo;Синий фон&raquo; — фон импровизированной страницы-вкладки ниже станет синим.</p>
+  <div class="page-preview" id="pagePreview">
+    <strong>Вкладка example.com</strong><br>
+    <span>Это содержимое страницы, на которую расширение внедряет стили (как через browser.tabs.executeScript).</span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Задание 3: Смена размера шрифта</h2>
+  <p>Кнопки &laquo;Увеличить&raquo; / &laquo;Уменьшить&raquo; меняют размер текста на странице-вкладке.</p>
+  <div class="row">
+    <button id="fontUp">Увеличить шрифт</button>
+    <button id="fontDown">Уменьшить шрифт</button>
+    <span>Размер: <b id="fontSizeLabel">16</b>px</span>
+  </div>
+  <div class="page-preview" id="pagePreview2" style="font-size:16px">
+    Текст этой вкладки меняет размер шрифта, как если бы скрипт выполнялся на реальной странице.
+  </div>
+</section>
+
+<section class="card">
+  <h2>Задание 4: Счетчик кликов</h2>
+  <p>Счётчик нажатий кнопки &laquo;Hello World!&raquo; сохраняется как настройка расширения (имитация <code>browser.storage.local</code> через <code>localStorage</code>).</p>
+  <div class="row">
+    <button class="green" id="countBtn">Hello World!</button>
+    <button class="danger" id="resetCountBtn">Обнулить счетчик</button>
+  </div>
+  <div class="output" id="out4">Счетчик: 0 нажатий (сохранён в localStorage как storage.local)</div>
+</section>
+
+<section class="card">
+  <h2>Задание 5: Тёмный режим</h2>
+  <p>Переключатель тёмного режима на странице-вкладке; состояние сохраняется в настройках расширения.</p>
+  <div class="row">
+    <button id="darkBtn">Включить тёмный режим</button>
+  </div>
+  <div class="page-preview" id="pagePreview3">
+    <strong>Вкладка example.com</strong><br>
+    <span>Фон и цвет текста меняются на тёмные (#1a1a1a).</span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Задание 6: Расширение с контент-скриптом</h2>
+  <p>Вместо внедрения кода через <code>executeScript</code> используем отдельный <code>content-script.js</code>, подключённый в <code>manifest.json</code> (matches: &lt;all_urls&gt;). Команды из popup передаются через <code>browser.runtime.onMessage</code>. Ниже — имитация: список вкладок + применение действий контент-скрипта к выбранной вкладке.</p>
+  <div class="tabs-sim" id="tabsSim">
+    <span class="tab active">Вкладка 1 (active)</span>
+    <span class="tab">Вкладка 2</span>
+    <span class="tab">Вкладка 3</span>
+  </div>
+  <div class="row">
+    <button class="blue" id="csMsgBtn">Отправить команду в контент-скрипт: раскрасить вкладку</button>
+  </div>
+  <div class="content-script-result" id="csResult">Сообщения контент-скрипта появятся здесь (имитация sendMessage → onMessage → reply).</div>
+  <div class="page-preview" id="pagePreview4">
+    <strong>Вкладка для контент-скрипта</strong><br>
+    <span>Контент-скрипт изменяет этот блок.</span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Задание 7: Заметки на странице</h2>
+  <p>Расширение, которое привязывает заметку к URL каждой вкладки и восстанавливает её при повторном открытии (имитация <code>browser.storage.local</code> с ключом по URL).</p>
+  <div class="row">
+    <label>Вкладка (URL):</label>
+    <select id="noteTabSelect">
+      <option>https://example.com</option>
+      <option>https://docs.mozilla.org</option>
+      <option>https://habr.com</option>
+    </select>
+    <input type="text" id="noteInput" placeholder="Текст заметки для этой страницы" style="flex:1;min-width:200px">
+    <button class="success" id="saveNoteBtn">Сохранить заметку</button>
+    <button class="danger" id="clearNoteBtn">Удалить заметку</button>
+  </div>
+  <div class="output" id="out7">Выберите вкладку и сохраните заметку — она привяжется к URL.</div>
+</section>
+
+<div class="card">
+  <h2>Справка: manifest.json (контент-скрипт, задание 6)</h2>
+  <pre class="output" style="min-height:0">{
+  "manifest_version": 2,
+  "name": "Hi Student",
+  "version": "1.0",
+  "browser_action": { "default_popup": "popup/popup.html" },
+  "permissions": ["activeTab", "storage"],
+  "content_scripts": [
+    { "matches": ["&lt;all_urls&gt;"], "js": ["content-script.js"] }
+  ]
+}</pre>
+</div>
+
+<script>
+// ---------- Общая имитация ----------
+function log(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent += (el.textContent ? '\n' : '') + msg;
+}
+
+// ЗАДАНИЕ 1: изменить приветствие
+const greeting = 'Привет, студент! 👋';
+document.getElementById('helloBtn').addEventListener('click', () => {
+  log('out1', 'Выполнено на вкладке (alert): ' + greeting);
+});
+
+// ЗАДАНИЕ 2: синий фон
+const pagePreview = document.getElementById('pagePreview');
+document.getElementById('blueBtn').addEventListener('click', () => {
+  pagePreview.style.backgroundColor = '#2196F3';
+  pagePreview.style.color = '#fff';
+  pagePreview.style.transition = 'background-color .5s';
+});
+document.getElementById('resetBgBtn').addEventListener('click', () => {
+  pagePreview.style.backgroundColor = '#fff';
+  pagePreview.style.color = '#222';
+});
+
+// ЗАДАНИЕ 3: размер шрифта
+const pagePreview2 = document.getElementById('pagePreview2');
+const fontSizeLabel = document.getElementById('fontSizeLabel');
+document.getElementById('fontUp').addEventListener('click', () => {
+  let s = parseInt(fontSizeLabel.textContent, 10);
+  s += 2;
+  fontSizeLabel.textContent = s;
+  pagePreview2.style.fontSize = s + 'px';
+});
+document.getElementById('fontDown').addEventListener('click', () => {
+  let s = parseInt(fontSizeLabel.textContent, 10);
+  s = Math.max(8, s - 2);
+  fontSizeLabel.textContent = s;
+  pagePreview2.style.fontSize = s + 'px';
+});
+
+// ЗАДАНИЕ 4: счетчик кликов (имитация browser.storage.local)
+const storageKey = 'ext_helloClicks';
+let clickCount = parseInt(localStorage.getItem(storageKey), 10) || 0;
+const out4 = document.getElementById('out4');
+function renderClickCount() {
+  out4.textContent = 'Счетчик: ' + clickCount + ' нажатий (сохранён в localStorage как storage.local)';
+}
+renderClickCount();
+document.getElementById('countBtn').addEventListener('click', () => {
+  clickCount++;
+  localStorage.setItem(storageKey, String(clickCount));
+  renderClickCount();
+});
+document.getElementById('resetCountBtn').addEventListener('click', () => {
+  clickCount = 0;
+  localStorage.setItem(storageKey, '0');
+  renderClickCount();
+  out4.textContent += '\nСчетчик обнулён';
+});
+
+// ЗАДАНИЕ 5: тёмный режим
+const pagePreview3 = document.getElementById('pagePreview3');
+const darkBtn = document.getElementById('darkBtn');
+const darkKey = 'ext_darkMode';
+let isDark = localStorage.getItem(darkKey) === '1';
+function applyDark(state) {
+  pagePreview3.classList.toggle('dark', state);
+  localStorage.setItem(darkKey, state ? '1' : '0');
+  darkBtn.textContent = state ? 'Выключить тёмный режим' : 'Включить тёмный режим';
+}
+applyDark(isDark);
+darkBtn.addEventListener('click', () => { isDark = !isDark; applyDark(isDark); });
+
+// ЗАДАНИЕ 6: контент-скрипт + сообщения
+const csResult = document.getElementById('csResult');
+const pagePreview4 = document.getElementById('pagePreview4');
+const tabsSim = document.getElementById('tabsSim');
+let activeTabIdx = 0;
+tabsSim.querySelectorAll('.tab').forEach((tabEl, i) => {
+  tabEl.addEventListener('click', () => {
+    tabsSim.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    activeTabIdx = i;
+  });
+});
+// Имитация content-script.js: слушает browser.runtime.onMessage
+function contentScriptOnMessage(msg, sender, sendResponse) {
+  if (msg && msg.command === 'colorize') {
+    csResult.textContent = '[content-script.js] получено сообщение: ' + JSON.stringify(msg) +
+      '\n[content-script.js] ответ: всплытие в popup — вкладка #' + msIndex + ' раскрашена.';
+    return sendResponse({ ok: true });
+  }
+}
+let msIndex = 0;
+document.getElementById('csMsgBtn').addEventListener('click', () => {
+  activeTabIdx = (activeTabIdx + 1) % 3;
+  tabsSim.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === activeTabIdx));
+  msIndex = activeTabIdx + 1;
+  const sender = { tab: { id: msIndex } };
+  // popup отправляет команду content-script'у
+  csResult.textContent = '[popup] browser.tabs.sendMessage(tabId=' + msIndex +
+    ', { command:"colorize", data:"hello" })\n[popup] ожидание ответа...';
+  setTimeout(() => {
+    let resp = null;
+    contentScriptOnMessage({ command: 'colorize', data: 'hello' }, sender, (r) => { resp = r; });
+    if (resp && resp.ok) {
+      pagePreview4.style.backgroundColor = '#d4f7dc';
+      pagePreview4.style.transition = 'background-color .4s';
+      csResult.textContent += '\n[popup/кнопка] ' + resp.ok + ' — контент-скрипт выполнен на вкладке.';
+    }
+  }, 500);
+});
+
+// ЗАДАНИЕ 7: заметки на странице (имитация browser.storage.local по URL)
+const noteTabSelect = document.getElementById('noteTabSelect');
+const noteInput = document.getElementById('noteInput');
+const noteKeyPrefix = 'ext_note_';
+function readNote(url) { return localStorage.getItem(noteKeyPrefix + url); }
+function renderNote() {
+  const url = noteTabSelect.value;
+  const saved = readNote(url);
+  out7.textContent = 'Заметка для ' + url + ': ' + (saved ? '"' + saved + '" (восстановлена из storage)' : 'нет заметки — привяжите и сохраните текст.');
+}
+noteTabSelect.addEventListener('change', renderNote);
+document.getElementById('saveNoteBtn').addEventListener('click', () => {
+  localStorage.setItem(noteKeyPrefix + noteTabSelect.value, noteInput.value.trim());
+  renderNote();
+});
+document.getElementById('clearNoteBtn').addEventListener('click', () => {
+  localStorage.removeItem(noteKeyPrefix + noteTabSelect.value);
+  noteInput.value = '';
+  renderNote();
+});
+renderNote();
+</script>
+</body>
+</html>

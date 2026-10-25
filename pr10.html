@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР10 — Доступ к HTML-элементам при помощи DOM</title>
+<style>
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.dyn-list{list-style:none;padding:0}
+.dyn-list li{background:#f0f3fa;border-left:3px solid #3b5bdb;padding:8px 12px;margin-bottom:6px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;animation:slideIn .25s ease}
+.dyn-list li button{background:#dc3545;border-radius:50%;width:26px;height:26px;padding:0;line-height:1}
+.search-text.hit{background:#ffe082;border:2px solid #f9a825;border-radius:4px;padding:2px 4px}
+.gallery-item{display:inline-block;background:#eef1f8;border:2px solid transparent;padding:10px 18px;border-radius:8px;margin:4px;cursor:pointer;animation:slideIn .25s ease}
+.gallery-item.selected{border-color:#28a745;background:#e6f6ec}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР10 — Доступ к HTML-элементам при помощи DOM</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Манипуляции с DOM-деревом через JavaScript.</div>
+
+<section class="card">
+    <h2>Задание 1: Сортировка списка</h2>
+    <p class="hint">Сортируйте элементы списка в алфавитном порядке (используется Array.from() и сортировка).</p>
+    <button id="sortBtn">🔀 Сортировать по алфавиту</button>
+    <ul class="dyn-list" id="sortableList">
+        <li>Банан</li>
+        <li>Яблоко</li>
+        <li>Апельсин</li>
+        <li>Груша</li>
+        <li>Манго</li>
+    </ul>
+    <div class="output" id="sortOutput">Список в исходном порядке. Нажми сортировку.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 2: Поиск по тексту</h2>
+    <p class="hint">Введите текст — все абзацы, содержащие его, будут подсвечены.</p>
+    <div class="row">
+        <input type="text" id="searchInput" placeholder="Текст для поиска...">
+        <button id="searchBtn">🔍 Найти</button>
+    </div>
+    <div id="searchTargets">
+        <p>JavaScript — язык программирования для веб-страниц.</p>
+        <p>DOM позволяет изменять содержимое страницы динамически.</p>
+        <p>Массивы и методы перебора — основа работы с данными.</p>
+        <p>События мыши и клавиатуры обрабатываются браузером.</p>
+        <p>Встроенные структуры данных помогают писать эффективный код.</p>
+    </div>
+    <div class="output" id="searchOutput">Найдено совпадений: 0</div>
+</section>
+
+<section class="card">
+    <h2>Задание 3: Сохранение состояния</h2>
+    <p class="hint">Список задач сохраняется в localStorage и восстанавливается при загрузке страницы.</p>
+    <div class="row">
+        <input type="text" id="todoInput" placeholder="Новая задача...">
+        <button class="success" id="addTodoBtn">➕ Добавить</button>
+    </div>
+    <ul class="dyn-list" id="todoList"></ul>
+    <button class="danger" id="clearTodoBtn">🗑️ Очистить все</button>
+    <div class="output" id="todoOutput">Задач: 0. Состояние сохранено в localStorage.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 4: Глубокое клонирование</h2>
+    <p class="hint">Функция рекурсивно клонирует DOM-элемент со всеми вложенными узлами и атрибутами.</p>
+    <div id="cloneSource">
+        <div style="border:2px solid #3b5bdb;border-radius:8px;padding:12px;max-width:320px;" data-test="source-1">
+            <strong>Оригинал</strong>
+            <p>Вложенный текст <em>с элементом</em> внутри.</p>
+            <ul>
+                <li>Пункт 1</li>
+                <li>Пункт 2</li>
+            </ul>
+        </div>
+    </div>
+    <button id="cloneBtn">📋 Клонировать</button>
+    <div id="cloneTarget" class="output" style="background:#fff;color:#1f2430;border:1px dashed #c9d1e0;font-family:inherit;white-space:normal;">Клон появится здесь...</div>
+</section>
+
+<section class="card">
+    <h2>Задание 5: Анимация добавления</h2>
+    <p class="hint">Новые элементы галереи и списка появляются с CSS-анимацией.</p>
+    <div class="row">
+        <input type="text" id="galleryInput" placeholder="Название элемента...">
+        <button class="success" id="galleryAddBtn">➕ Добавить в галерею</button>
+        <button id="gallerySortBtn">🔀 Сортировать</button>
+    </div>
+    <div id="gallery" style="margin:10px 0;">
+        <span class="gallery-item">Элемент 1</span>
+        <span class="gallery-item">Элемент 3</span>
+        <span class="gallery-item">Элемент 2</span>
+    </div>
+    <div class="output" id="galleryOutput">В галерее 3 элемента. Добавляйте новые со своими названиями.</div>
+</section>
+
+<script>
+(function () {
+    /*** Задание 1: Сортировка списка ***/
+    const sortBtn = document.getElementById('sortBtn');
+    const sortableList = document.getElementById('sortableList');
+    const sortOutput = document.getElementById('sortOutput');
+
+    sortBtn.addEventListener('click', function () {
+        const items = Array.from(sortableList.children);
+        items.sort(function (a, b) {
+            return a.textContent.localeCompare(b.textContent, 'ru');
+        });
+        items.forEach(function (li) { sortableList.appendChild(li); });
+        const order = items.map(function (li) { return li.textContent; }).join(' → ');
+        sortOutput.textContent = 'Отсортировано: ' + order;
+    });
+
+    /*** Задание 2: Поиск по тексту ***/
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchTargets = document.getElementById('searchTargets');
+    const searchOutput = document.getElementById('searchOutput');
+    const paragraphs = searchTargets.querySelectorAll('p');
+
+    function clearHits() {
+        paragraphs.forEach(function (p) { p.classList.remove('hit'); });
+    }
+
+    searchBtn.addEventListener('click', function () {
+        clearHits();
+        const query = searchInput.value.toLowerCase().trim();
+        if (!query) {
+            searchOutput.textContent = 'Найдено совпадений: 0';
+            return;
+        }
+        let count = 0;
+        paragraphs.forEach(function (p) {
+            if (p.textContent.toLowerCase().includes(query)) {
+                p.classList.add('hit');
+                count++;
+            }
+        });
+        searchOutput.textContent = 'Найдено совпадений: ' + count;
+    });
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') searchBtn.click();
+    });
+
+    /*** Задание 3: Сохранение состояния ***/
+    const STORAGE_KEY = 'pr10-todos';
+    const todoInput = document.getElementById('todoInput');
+    const addTodoBtn = document.getElementById('addTodoBtn');
+    const clearTodoBtn = document.getElementById('clearTodoBtn');
+    const todoList = document.getElementById('todoList');
+    const todoOutput = document.getElementById('todoOutput');
+
+    let todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    function renderTodos() {
+        todoList.innerHTML = '';
+        todos.forEach(function (text, index) {
+            const li = document.createElement('li');
+            li.textContent = text;
+            const del = document.createElement('button');
+            del.textContent = '×';
+            del.addEventListener('click', function () {
+                todos.splice(index, 1);
+                saveAndRender();
+            });
+            li.appendChild(del);
+            todoList.appendChild(li);
+        });
+        todoOutput.textContent = 'Задач: ' + todos.length + '. Состояние сохранено в localStorage.';
+    }
+
+    function saveAndRender() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        renderTodos();
+    }
+
+    addTodoBtn.addEventListener('click', function () {
+        const text = todoInput.value.trim();
+        if (!text) return;
+        todos.push(text);
+        todoInput.value = '';
+        saveAndRender();
+    });
+    todoInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') addTodoBtn.click();
+    });
+    clearTodoBtn.addEventListener('click', function () {
+        todos = [];
+        saveAndRender();
+    });
+
+    renderTodos();
+
+    /*** Задание 4: Глубокое клонирование ***/
+    function deepClone(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return document.createTextNode(node.nodeValue);
+        }
+        const clone = node.cloneNode(false);
+        if (node.attributes) {
+            Array.from(node.attributes).forEach(function (attr) {
+                clone.setAttribute(attr.name, attr.value);
+            });
+        }
+        Array.from(node.childNodes).forEach(function (child) {
+            clone.appendChild(deepClone(child));
+        });
+        return clone;
+    }
+
+    const cloneBtn = document.getElementById('cloneBtn');
+    const cloneTarget = document.getElementById('cloneTarget');
+    const cloneSource = document.getElementById('cloneSource').firstElementChild;
+
+    cloneBtn.addEventListener('click', function () {
+        const copy = deepClone(cloneSource);
+        copy.style.borderColor = '#28a745';
+        cloneTarget.innerHTML = '';
+        cloneTarget.appendChild(copy);
+    });
+
+    /*** Задание 5: Анимация добавления ***/
+    const galleryInput = document.getElementById('galleryInput');
+    const galleryAddBtn = document.getElementById('galleryAddBtn');
+    const gallerySortBtn = document.getElementById('gallerySortBtn');
+    const gallery = document.getElementById('gallery');
+    const galleryOutput = document.getElementById('galleryOutput');
+
+    function updateGalleryCount() {
+        galleryOutput.textContent = 'В галерее ' + gallery.children.length + ' элементов. Добавляйте новые со своими названиями.';
+    }
+
+    galleryAddBtn.addEventListener('click', function () {
+        const name = galleryInput.value.trim();
+        if (!name) return;
+        const span = document.createElement('span');
+        span.className = 'gallery-item';
+        span.textContent = name;
+        span.addEventListener('click', function () { this.classList.toggle('selected'); });
+        gallery.appendChild(span);
+        galleryInput.value = '';
+        updateGalleryCount();
+    });
+    galleryInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') galleryAddBtn.click();
+    });
+
+    gallerySortBtn.addEventListener('click', function () {
+        const items = Array.from(gallery.children).sort(function (a, b) {
+            return a.textContent.localeCompare(b.textContent, 'ru');
+        });
+        items.forEach(function (span) { gallery.appendChild(span); });
+    });
+
+    Array.from(gallery.children).forEach(function (span) {
+        span.addEventListener('click', function () { this.classList.toggle('selected'); });
+    });
+    updateGalleryCount();
+})();
+</script>
+</body>
+</html>

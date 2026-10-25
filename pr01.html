@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР01 — Основы синтаксиса и типы данных</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР01 — Основы синтаксиса и типы данных</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения</p>
+
+    <section class="card">
+        <h2>Задание 1: Калькулятор возраста</h2>
+        <p class="hint">Введите год рождения — вычислится текущий возраст.</p>
+        <div class="row">
+            <input type="number" id="pr01-birthYear" placeholder="Год рождения (например 2005)" min="1900">
+            <button onclick="calcAge()">Рассчитать возраст</button>
+        </div>
+        <div class="output" id="pr01-age-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 2: Таблица умножения на 5</h2>
+        <p class="hint">Выводится таблица умножения на 5 от 1 до 10.</p>
+        <button onclick="multTable()">Показать таблицу</button>
+        <div class="output" id="pr01-table-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 3: Поиск максимума из трёх чисел</h2>
+        <p class="hint">Введите три числа — программа определит максимальное.</p>
+        <div class="row">
+            <input type="number" id="pr01-num1" placeholder="Число 1" style="width:100px">
+            <input type="number" id="pr01-num2" placeholder="Число 2" style="width:100px">
+            <input type="number" id="pr01-num3" placeholder="Число 3" style="width:100px">
+            <button onclick="findMax()">Найти максимум</button>
+        </div>
+        <div class="output" id="pr01-max-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 4: Факториал числа N</h2>
+        <p class="hint">N! = 1 × 2 × 3 × ... × N. Введите положительное целое число N.</p>
+        <div class="row">
+            <input type="number" id="pr01-n" placeholder="N (например 6)" min="0">
+            <button onclick="calcFactorial()">Вычислить факториал</button>
+        </div>
+        <div class="output" id="pr01-fact-output"></div>
+    </section>
+
+    <script>
+        function calcAge() {
+            const birthYear = parseInt(document.getElementById('pr01-birthYear').value);
+            const out = document.getElementById('pr01-age-output');
+            if (isNaN(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) {
+                out.textContent = 'Пожалуйста, введите корректный год рождения.';
+                return;
+            }
+            const currentYear = new Date().getFullYear();
+            const age = currentYear - birthYear;
+            out.textContent = 'Год рождения: ' + birthYear + '\nТекущий год: ' + currentYear +
+                '\nВаш возраст: ' + age + ' лет';
+        }
+
+        function multTable() {
+            const out = document.getElementById('pr01-table-output');
+            let lines = 'Таблица умножения на 5:\n\n';
+            for (let i = 1; i <= 10; i++) {
+                lines += '5 × ' + i + ' = ' + (5 * i) + '\n';
+            }
+            out.textContent = lines;
+        }
+
+        function findMax() {
+            const out = document.getElementById('pr01-max-output');
+            const a = parseFloat(document.getElementById('pr01-num1').value);
+            const b = parseFloat(document.getElementById('pr01-num2').value);
+            const c = parseFloat(document.getElementById('pr01-num3').value);
+            if (isNaN(a) || isNaN(b) || isNaN(c)) {
+                out.textContent = 'Пожалуйста, введите все три числа.';
+                return;
+            }
+            let max = a;
+            if (b > max) max = b;
+            if (c > max) max = c;
+            out.textContent = 'Числа: ' + a + ', ' + b + ', ' + c + '\nМаксимальное число: ' + max;
+        }
+
+        function calcFactorial() {
+            const n = parseInt(document.getElementById('pr01-n').value);
+            const out = document.getElementById('pr01-fact-output');
+            if (isNaN(n) || n < 0) {
+                out.textContent = 'Пожалуйста, введите неотрицательное целое число N.';
+                return;
+            }
+            let factorial = 1;
+            for (let i = 1; i <= n; i++) {
+                factorial *= i;
+            }
+            out.textContent = 'N = ' + n + '\nN! = ' + factorial;
+        }
+    </script>
+</body>
+</html>

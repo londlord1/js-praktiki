@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПР08 — Выполнение простейших вычислений в JavaScript</title>
+    <style>
+        *{box-sizing:border-box}
+        body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+        .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+        h1{font-size:24px;margin:0}
+        .sub{color:#667;margin:4px 0 18px}
+        .back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+        .card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+        .card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+        button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+        button:hover{background:#2f49c0}
+        button.danger{background:#dc3545}
+        button.success{background:#28a745}
+        input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+        input:focus,select:focus{outline:none;border-color:#3b5bdb}
+        .output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+        .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+        .hint{color:#788;font-size:13px;margin:6px 0 10px}
+        table{border-collapse:collapse;margin-top:10px}
+        td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+        th{background:#f0f3fa}
+        ul{padding-left:22px}
+        .static-value{background:#f6f8fc;border-radius:8px;padding:4px 10px;font-weight:600}
+        .label-caption{font-size:12px;color:#788}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>ПР08 — Выполнение простейших вычислений в JavaScript</h1>
+        <a class="back" href="index.html">← Все работы</a>
+    </div>
+    <p class="sub">Задания для самостоятельного выполнения — настройки пользователя и браузера</p>
+
+    <section class="card">
+        <h2>Задание 1: Автоматическое определение скорости скачивания</h2>
+        <p class="hint">
+            Используется скорость из <strong>navigator.connection.downlink</strong> (Мбит/с) вместо фиксированных
+            50 Мбит/с. Время загрузки файла 500 МБ пересчитывается динамически.
+        </p>
+        <p><span class="label-caption">Скорость соединения (downlink):</span> <span class="static-value" id="pr08-downlink">—</span></p>
+        <p><span class="label-caption">Тип соединения:</span> <span class="static-value" id="pr08-connType">—</span></p>
+        <div class="row">
+            <input type="number" id="pr08-filesize" placeholder="Размер файла (МБ)" style="width:160px" value="500">
+            <button onclick="runDownload()">Рассчитать время скачивания</button>
+        </div>
+        <div class="output" id="pr08-download-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 2: Глубина цвета (colorDepth)</h2>
+        <p class="hint">
+            Выводится глубина цвета экрана в битах и количество байт, приходящихся на один пиксель.
+        </p>
+        <div class="row">
+            <input type="number" id="pr08-depth" placeholder="Глубина (бит)" style="width:160px" value="">
+            <button onclick="runColorDepth()">Рассчитать</button>
+        </div>
+        <div class="output" id="pr08-color-output"></div>
+    </section>
+
+    <section class="card">
+        <h2>Задание 3: «Умный» кэш — сколько страниц A4 в ОЗУ</h2>
+        <p class="hint">
+            Из объёма ОЗУ (ГБ) рассчитывается, сколько текстовых страниц формата A4 может поместиться в памяти
+            (условно 1 страница текста ≈ 10 КБ).
+        </p>
+        <div class="row">
+            <input type="number" id="pr08-ram" placeholder="ОЗУ (ГБ)" style="width:140px" value="">
+            <button onclick="runSmartCache()">Рассчитать</button>
+        </div>
+        <div class="output" id="pr08-cache-output"></div>
+    </section>
+
+    <script>
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+        function realSpeed() {
+            return connection && connection.downlink ? connection.downlink : 50;
+        }
+
+        function runDownload() {
+            const fileSizeMB = parseFloat(document.getElementById('pr08-filesize').value);
+            const out = document.getElementById('pr08-download-output');
+            if (isNaN(fileSizeMB) || fileSizeMB <= 0) {
+                out.textContent = 'Введите корректный размер файла.';
+                return;
+            }
+            const speedMbps = realSpeed();
+            const speedMBps = speedMbps / 8;
+            const sec = fileSizeMB / speedMBps;
+            const minutes = Math.floor(sec / 60);
+            const remainingSec = Math.round(sec % 60);
+            out.textContent =
+                'Файл: ' + fileSizeMB + ' МБ\n' +
+                'Скорость соединения: ' + speedMbps + ' Мбит/с (от браузера)\n' +
+                'Скорость в МБ/с: ' + (Math.round(speedMBps * 100) / 100) + ' МБ/с\n\n' +
+                'Время скачивания: ' + sec.toFixed(1) + ' сек' +
+                (minutes > 0 ? '  (' + minutes + ' мин ' + remainingSec + ' сек)' : '');
+        }
+
+        function runColorDepth() {
+            let depth = parseInt(document.getElementById('pr08-depth').value);
+            if (isNaN(depth)) depth = screen.colorDepth;
+            const out = document.getElementById('pr08-color-output');
+            const bytes = depth / 8;
+            out.textContent =
+                'Глубина цвета экрана (screen.colorDepth): ' + screen.colorDepth + ' бит\n' +
+                'Указанная/текущая глубина: ' + depth + ' бит\n\n' +
+                'Байт на пиксель (глубина ÷ 8): ' + bytes + ' байт\n' +
+                'Бит на пиксель: ' + depth + ' бит';
+        }
+
+        function runSmartCache() {
+            let ram = parseFloat(document.getElementById('pr08-ram').value);
+            const out = document.getElementById('pr08-cache-output');
+            if (isNaN(ram)) {
+                ram = navigator.deviceMemory || 4;
+                document.getElementById('pr08-ram').value = ram;
+            }
+            const pagesKB = ram * 1024 * 1024;
+            const pages = pagesKB / 10;
+            out.textContent =
+                'ОЗУ: ' + ram + ' ГБ\n' +
+                'ОЗУ: ' + (ram * 1024) + ' МБ = ' + (ram * 1024 * 1024) + ' КБ\n\n' +
+                'При 1 странице ≈ 10 КБ в ОЗУ поместится ~ ' +
+                Math.floor(pages).toLocaleString('ru-RU') + ' текстовых страниц A4';
+        }
+
+        document.getElementById('pr08-downlink').textContent = realSpeed() + ' Мбит/с';
+        document.getElementById('pr08-connType').textContent = connection ? (connection.effectiveType || 'не определено') : 'не определено';
+        document.getElementById('pr08-depth').value = screen.colorDepth;
+        document.getElementById('pr08-ram').value = navigator.deviceMemory || 4;
+    </script>
+</body>
+</html>

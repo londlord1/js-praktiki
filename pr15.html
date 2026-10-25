@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПР15 — Set, Map и Array</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;max-width:1000px;margin:0 auto;padding:24px;background:#eef1f8;color:#1f2430;line-height:1.5}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:#667;margin:4px 0 18px}
+.back{display:inline-block;background:#3b5bdb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px;margin:10px 0}
+.card{background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin-top:0;border-left:4px solid #3b5bdb;padding-left:10px;font-size:19px}
+button{background:#3b5bdb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0;font-size:14px}
+button:hover{background:#2f49c0}
+button.danger{background:#dc3545}
+button.success{background:#28a745}
+input,select{padding:8px 12px;border:1px solid #c9d1e0;border-radius:8px;margin:4px 4px 4px 0;font-size:14px}
+input:focus,select:focus{outline:none;border-color:#3b5bdb}
+.output{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;font-family:'Consolas','Courier New',monospace;font-size:13px;white-space:pre-wrap;min-height:42px;overflow-x:auto}
+.row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.hint{color:#788;font-size:13px;margin:6px 0 10px}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #d6dce8;padding:6px 10px;font-size:14px}
+th{background:#f0f3fa}
+ul{padding-left:22px}
+.suggest-box{position:relative;display:inline-block;min-width:240px}
+.suggest-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #c9d1e0;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:50;max-height:160px;overflow:auto;display:none}
+.suggest-list div{padding:8px 12px;cursor:pointer}
+.suggest-list div:hover{background:#eef1f8}
+.tag-cloud .tag{display:inline-block;background:#eef1f8;border:1px solid #c9d1e0;border-radius:16px;padding:4px 12px;margin:3px;font-size:13px}
+.tag-cloud .tag button{background:none;border:none;color:#dc3545;cursor:pointer;font-weight:bold;padding:0 4px;margin:0}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Все работы</a>
+<div class="topbar">
+    <h1>ПР15 — Set, Map и Array</h1>
+</div>
+<div class="sub">Задания для самостоятельного выполнения. Работа с Set, Map, WeakMap, WeakSet и конвертация между структурами.</div>
+
+<section class="card">
+    <h2>Задание 1: Автодополнение тегов</h2>
+    <p class="hint">Выпадающий список с подсказками при вводе тега. Подсказки берутся из массива allTagsEver и фильтруются через filter, уже добавленные исключаются.</p>
+    <div class="row">
+        <div class="suggest-box">
+            <input type="text" id="tagInput" placeholder="Введите тег...">
+            <div class="suggest-list" id="suggestList"></div>
+        </div>
+        <button class="success" id="addTagBtn">➕ Добавить в статью</button>
+        <button class="success" id="saveArticleBtn">💾 Сохранить статью</button>
+    </div>
+    <div class="tag-cloud" id="currentTags"></div>
+    <div class="output" id="tagsOutput">Статей сохранено: 0. Всего уникальных тегов: 0.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 2: Инверсия статистики — статьи по тегу</h2>
+    <p class="hint">Map, где ключ — тег, а значение — Set из ID статей. Позволяет быстро находить статьи с конкретным тегом.</p>
+    <button id="showInvertedBtn">📊 Показать индекс статей</button>
+    <div class="output" id="invertedOutput">Нажмите кнопку после сохранения статей.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 3: Поиск пересечения тегов</h2>
+    <p class="hint">Функция находит теги, общие для двух Set (статей), через фильтрацию: [...setA].filter(tag => setB.has(tag)).</p>
+    <div class="row">
+        <input type="text" id="setAInput" placeholder="Статья A: js react css">
+        <input type="text" id="setBInput" placeholder="Статья B: js html react">
+        <button id="intersectBtn">🔀 Пересечение</button>
+    </div>
+    <div class="output" id="intersectOutput">Введите теги через пробел и нажмите кнопку.</div>
+</section>
+
+<section class="card">
+    <h2>Задание 4: WeakMap и WeakSet (кэш)</h2>
+    <p class="hint">Кэш вычислений для объектов статей через WeakMap: ключ — объект, значение — подсчитанное число тегов. Когда объект теряет ссылки, запись удаляется.</p>
+    <button id="cacheBtn">🧠 Вычислить количество тегов</button>
+    <button id="gcBtn">🗑️ Удалить ссылку на последнюю статью</button>
+    <div class="output" id="cacheOutput">Нажмите кнопку, чтобы закэшировать вычисление.</div>
+</section>
+
+<script>
+(function () {
+    /*** Общая система тегов ***/
+    let currentArticleTags = new Set();
+    const tagStats = new Map();
+    const allTagsEver = [];
+    const tagToArticles = new Map();
+    let articleCount = 0;
+    let nextArticleId = 1;
+
+    const tagInput = document.getElementById('tagInput');
+    const suggestList = document.getElementById('suggestList');
+    const tagsOutput = document.getElementById('tagsOutput');
+
+    function renderCurrentTags() {
+        const container = document.getElementById('currentTags');
+        if (currentArticleTags.size === 0) {
+            container.innerHTML = '<span style="color:#788;">Теги не добавлены</span>';
+        } else {
+            container.innerHTML = [...currentArticleTags].map(function (tag) {
+                return '<span class="tag">#' + tag + ' <button data-rm="' + tag + '">×</button></span>';
+            }).join('');
+            document.querySelectorAll('[data-rm]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    currentArticleTags.delete(btn.dataset.rm);
+                    renderCurrentTags();
+                });
+            });
+        }
+    }
+
+    function updateTagsOutput() {
+        tagsOutput.textContent = 'Статей сохранено: ' + articleCount + '. ' +
+            'Тегов текущей статьи: ' + currentArticleTags.size + '. ' +
+            'Всего уникальных тегов: ' + allTagsEver.length + '.';
+    }
+
+    /*** Автодополнение ***/
+    function suggestTags(inputText) {
+        const query = inputText.toLowerCase().trim();
+        if (query === '') return [];
+        return allTagsEver.filter(tag =>
+            tag.startsWith(query) && !currentArticleTags.has(tag)
+        );
+    }
+
+    tagInput.addEventListener('input', function () {
+        const suggestions = suggestTags(this.value);
+        if (suggestions.length && this.value.trim()) {
+            suggestList.style.display = 'block';
+            suggestList.innerHTML = suggestions.map(function (t) { return '<div>' + t + '</div>'; }).join('');
+        } else {
+            suggestList.style.display = 'none';
+            suggestList.innerHTML = '';
+        }
+    });
+
+    tagInput.addEventListener('blur', function () {
+        setTimeout(function () { suggestList.style.display = 'none'; }, 150);
+    });
+
+    suggestList.addEventListener('click', function (e) {
+        if (e.target.tagName === 'DIV') {
+            tagInput.value = e.target.textContent;
+            suggestList.style.display = 'none';
+        }
+    });
+
+    document.getElementById('addTagBtn').addEventListener('click', function () {
+        const raw = tagInput.value.trim();
+        if (!raw) return;
+        const tag = raw.toLowerCase();
+        currentArticleTags.add(tag);
+        if (!allTagsEver.includes(tag)) allTagsEver.push(tag);
+        tagInput.value = '';
+        suggestList.style.display = 'none';
+        renderCurrentTags();
+        updateTagsOutput();
+    });
+    tagInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('addTagBtn').click();
+    });
+
+    /*** Сохранение статьи — пополняет tagToArticles (задание 2) ***/
+    document.getElementById('saveArticleBtn').addEventListener('click', function () {
+        if (currentArticleTags.size === 0) {
+            tagsOutput.textContent = 'Добавьте хотя бы один тег перед сохранением!';
+            return;
+        }
+        articleCount++;
+        const articleId = nextArticleId++;
+
+        currentArticleTags.forEach(function (tag) {
+            const cur = tagStats.get(tag) || 0;
+            tagStats.set(tag, cur + 1);
+
+            if (!tagToArticles.has(tag)) {
+                tagToArticles.set(tag, new Set());
+            }
+            tagToArticles.get(tag).add(articleId);
+        });
+
+        currentArticleTags.clear();
+        renderCurrentTags();
+        updateTagsOutput();
+    });
+
+    renderCurrentTags();
+    updateTagsOutput();
+
+    /*** Задание 2: Инверсия статистики ***/
+    document.getElementById('showInvertedBtn').addEventListener('click', function () {
+        const out = document.getElementById('invertedOutput');
+        if (tagToArticles.size === 0) {
+            out.textContent = 'Нет данных. Сохраните хотя бы одну статью с тегами.';
+            return;
+        }
+        let html = 'Индекс статей (Map: тег → Set статей):\n';
+        [...tagToArticles.entries()].forEach(function (pair) {
+            const tag = pair[0];
+            const set = pair[1];
+            html += '  ' + tag + ' → Set(' + [...set].join(', ') + ')\n';
+        });
+        html += '\nПроверка includes/id из Set статей покажет все статьи по тегу.';
+        out.textContent = html;
+    });
+
+    /*** Задание 3: Пересечение тегов ***/
+    function commonTags(setA, setB) {
+        return new Set([...setA].filter(tag => setB.has(tag)));
+    }
+
+    document.getElementById('intersectBtn').addEventListener('click', function () {
+        const setA = new Set(document.getElementById('setAInput').value.split(/\s+/).filter(Boolean));
+        const setB = new Set(document.getElementById('setBInput').value.split(/\s+/).filter(Boolean));
+        const common = commonTags(setA, setB);
+        const out = document.getElementById('intersectOutput');
+        out.textContent =
+            'Set A: [' + [...setA].join(', ') + ']\n' +
+            'Set B: [' + [...setB].join(', ') + ']\n\n' +
+            'Общие теги: ' + (common.size ? '[' + [...common].join(', ') + ']' : '(нет пересечений)');
+    });
+
+    /*** Задание 4: WeakMap и WeakSet ***/
+    const articleCache = new WeakMap();
+    let lastArticleObject = null;
+    let cacheHits = 0;
+
+    function getTagCount(articleObject) {
+        if (articleCache.has(articleObject)) {
+            cacheHits++;
+            return { count: articleCache.get(articleObject), cached: true };
+        }
+        const count = articleObject.tags.size;
+        articleCache.set(articleObject, count);
+        return { count: count, cached: false };
+    }
+
+    function makeArticle(presetTags) {
+        const tags = new Set(presetTags.length ? presetTags : ['js', 'react', 'css', 'html']);
+        return { id: nextArticleId, tags: tags };
+    }
+
+    document.getElementById('cacheBtn').addEventListener('click', function () {
+        if (!lastArticleObject) {
+            lastArticleObject = makeArticle(['js', 'react']);
+        }
+        const res = getTagCount(lastArticleObject);
+        document.getElementById('cacheOutput').textContent =
+            'Объект статьи (id ' + lastArticleObject.id + '), количество тегов: ' + res.count + '\n' +
+            'Взято из кэша WeakMap: ' + (res.cached ? 'да' : 'нет') + '\n' +
+            'Обращений к кэшу: ' + cacheHits + '\n\n' +
+            'При следующем нажатии результат возьмётся из кэша (WeakMap).';
+    });
+
+    document.getElementById('gcBtn').addEventListener('click', function () {
+        if (lastArticleObject) {
+            document.getElementById('cacheOutput').textContent =
+                'Ссылка на последнюю статью удалена. Объект больше недоступен,\n' +
+                'запись в WeakMap будет удалена сборщиком мусора автоматически.';
+            lastArticleObject = null;
+        } else {
+            document.getElementById('cacheOutput').textContent =
+                'Нет активной ссылки на объект статьи. Сначала вычислите количество тегов.';
+        }
+    });
+})();
+</script>
+</body>
+</html>

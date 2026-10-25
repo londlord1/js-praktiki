@@ -179,9 +179,9 @@ a.card .tasks{font-size:13px;color:var(--muted)}
 .ccard.flipped .ccard-inner{transform:rotateY(180deg)}
 .ccard-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
   overflow:hidden;display:flex;flex-direction:column;padding:22px 20px 20px;border-radius:18px}
-.ccard-face.back{transform:rotateY(180deg);justify-content:space-between}
-.ccard::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
-  background:radial-gradient(240px 140px at 88% -18%,rgba(255,255,255,.28),transparent 60%)}
+.ccard-face.back{transform:rotateY(180deg);padding:0;background:linear-gradient(160deg,#f3f5fa,#d9deea)}
+.ccard-face.front::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:18px;
+  background:radial-gradient(240px 140px at 88% -18%,rgba(255,255,255,.3),transparent 60%)}
 .ccard .brand,.ccard .number,.ccard .bottom,.ccard-back-body{position:relative;z-index:3}
 .ccard .brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .ccard .brand-name{font-size:14px;background:rgba(255,255,255,.16);padding:4px 12px;border-radius:12px}
@@ -189,16 +189,25 @@ a.card .tasks{font-size:13px;color:var(--muted)}
 .ccard .bottom{display:flex;justify-content:space-between;gap:20px}
 .ccard .bottom .label{font-size:10px;text-transform:uppercase;opacity:.6}
 .ccard .bottom .value{font-size:14px;letter-spacing:1px;text-transform:uppercase}
-.magstripe{height:40px;background:#0b0f1e;margin:-22px -20px 18px;opacity:.9}
-.ccard-back-body{padding:0 4px 6px}
-.back-row{display:flex;align-items:stretch;gap:14px}
-.sigline{flex:1;background:#fff;border-radius:6px;padding:8px 12px;min-height:46px;display:flex;flex-direction:column;justify-content:flex-end;color:#5b6478}
-.sigline .label{color:#adb5bd;font-size:9px;letter-spacing:1px;margin-bottom:2px}
-.sig{font-family:'Segoe Script','Brush Script MT',cursive;font-size:20px;color:#1c2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cvv-box{background:#eef1f8;color:#1c2333;border-radius:6px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;min-width:66px}
-.cvv-box .label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280}
-.cvv-box .value{font-size:19px;font-family:var(--mono);letter-spacing:3px}
-.back-note{color:rgba(255,255,255,.6);font-size:11px;margin-top:18px;text-align:center}
+.magstripe{height:44px;width:100%;background:linear-gradient(180deg,#141414,#000 60%,#1a1a1a);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.ccard-back-body{padding:16px 18px 12px;display:flex;flex-direction:column;flex:1;gap:14px}
+.sig-panel{position:relative;background:#f4f6fb;border-radius:8px;height:52px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.18)}
+.sig-panel::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(30,40,80,.06) 6px 7px)}
+.sig{position:absolute;left:12px;right:100px;top:0;bottom:0;display:flex;align-items:flex-end;padding-bottom:4px;
+  font-family:'Segoe Script','Brush Script MT',cursive;font-size:22px;color:#20253a;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvv-box{position:absolute;right:6px;top:6px;bottom:6px;width:82px;background:#fff;border-left:1px solid rgba(20,30,60,.12);
+  border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}
+.cvv-box .cvv-num{font-family:var(--mono);font-size:16px;letter-spacing:2px;color:#1c2333}
+.cvv-box .cvv-label{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-top:2px}
+.back-footer{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:4px}
+.holo{flex:0 0 auto;width:34px;height:26px;border-radius:5px;
+  background:linear-gradient(135deg,#b8f0ff,#5fc1ff 35%,#c3a6ff 62%,#ffd7a0 100%);
+  box-shadow:inset 0 0 6px rgba(255,255,255,.75);opacity:.95}
+.back-info{flex:1;font-size:10px;color:#5b6478;line-height:1.35}
+.back-last4{font-family:var(--mono);font-size:14px;color:#333;letter-spacing:2px}
+.back-note{color:rgba(255,255,255,.6);font-size:10px;margin:0;text-align:center}
 .fields-col .fg input,.fields-col select{font-size:15px}</style>
 </head>
 <body>
@@ -233,11 +242,16 @@ a.card .tasks{font-size:13px;color:var(--muted)}
         <div class="ccard-face back">
           <div class="magstripe"></div>
           <div class="ccard-back-body">
-            <div class="back-row">
-              <div class="sigline"><span class="label">Подпись</span><div class="sig" id="cardSignature"></div></div>
-              <div class="cvv-box"><span class="label">CVV</span><span class="value" id="cardCvvDisplay">•••</span></div>
+            <div class="sig-panel">
+              <span class="sig" id="cardSignature"></span>
+              <div class="cvv-box"><span class="cvv-num" id="cardCvvDisplay">•••</span><span class="cvv-label">CVV</span></div>
             </div>
-            <div class="back-note">Нажмите на карту, чтобы перевернуть</div>
+            <div class="back-footer">
+              <span class="holo"></span>
+              <span class="back-info">Карта выпущена банком «ПР20» · Служба поддержки 8 800 000-00-00</span>
+              <span class="back-last4" id="cardLast4">••••</span>
+            </div>
+            <div class="back-note">Нажмите, чтобы перевернуть</div>
           </div>
         </div>
       </div>
@@ -293,6 +307,7 @@ const brandName = document.getElementById('brandName');
 const currencyDisplay = document.getElementById('currencyDisplay');
 const cvvDisplay = document.getElementById('cardCvvDisplay');
 const signature = document.getElementById('cardSignature');
+const last4Display = document.getElementById('cardLast4');
 const cardLog = document.getElementById('cardLog');
 
 const STORE = 'cardData';
@@ -349,6 +364,7 @@ function updateCard() {
   expiryDisplay.textContent = expiryInput.value || 'MM/YY';
   signature.textContent = holderInput.value.trim().toUpperCase() || 'ИМЯ ФАМИЛИЯ';
   cvvDisplay.textContent = cvvInput.value || '•'.repeat(type === 'amex' ? 4 : 3);
+  last4Display.textContent = (numberInput.value.replace(/\s/g, '').slice(-4)) || '••••';
   const maxCvv = type === 'amex' ? 4 : 3;
   cvvInput.maxLength = maxCvv;
   cvvInput.placeholder = '•'.repeat(maxCvv);

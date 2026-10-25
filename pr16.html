@@ -445,16 +445,26 @@ a.card .tasks{font-size:13px;color:var(--muted)}
     });
 
     document.getElementById('copyBtn').addEventListener('click', function () {
+        const out = document.getElementById('exportOutput');
+        function legacyCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { return document.execCommand('copy'); } catch (e) { return false; }
+            finally { document.body.removeChild(ta); }
+        }
+        function done() { out.textContent = '✅ JSON скопирован в буфер обмена.'; }
         if (!lastExport) {
-            document.getElementById('exportOutput').textContent = 'Сначала выполните экспорт (кнопка «Экспорт в JSON»).';
+            out.textContent = 'Сначала выполните экспорт (кнопка «Экспорт в JSON»).';
             return;
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(lastExport).then(function () {
-                document.getElementById('exportOutput').textContent = '✅ JSON скопирован в буфер обмена.';
+            navigator.clipboard.writeText(lastExport).then(done).catch(function () {
+                if (legacyCopy(lastExport)) done(); else out.textContent = lastExport;
             });
         } else {
-            document.getElementById('exportOutput').textContent = lastExport;
+            if (legacyCopy(lastExport)) done(); else out.textContent = lastExport;
         }
     });
 

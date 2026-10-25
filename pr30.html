@@ -198,8 +198,15 @@ function CopyButton({ quote }) {
   const share = async () => {
     if (!quote) return;
     const text = `«${quote.content}» — ${quote.author}`;
-    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }
-    catch { setCopied(false); }
+    const flash = () => { setCopied(true); setTimeout(() => setCopied(false), 1500); };
+    const legacy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { return document.execCommand('copy'); } finally { document.body.removeChild(ta); }
+    };
+    try { await navigator.clipboard.writeText(text); flash(); }
+    catch { if (legacy()) flash(); }
   };
   return <button className="btn-orange" onClick={share}>{copied ? '✓ Скопировано' : '📋 Поделиться/копировать'}</button>;
 }

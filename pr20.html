@@ -170,16 +170,35 @@ a.card .tasks{font-size:13px;color:var(--muted)}
 /* ============ ПР20 — образцовая вёрстка (карта + форма в 2 колонки) ============ */
 .card-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:26px;align-items:start;margin-top:16px}
 @media(max-width:860px){.card-body{grid-template-columns:1fr}}
-.preview-col{margin:0}
 .preview-col .preview-wrap{margin:0;padding:22px;border-radius:18px;background:linear-gradient(150deg,#111a37,#0f3460)}
-#card{min-height:215px;border-radius:18px;border:1px solid rgba(255,255,255,.14)}
-.ccard{position:relative;overflow:hidden}
-.ccard::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(240px 140px at 88% -18%,rgba(255,255,255,.32),transparent 60%)}
-.ccard>*{position:relative;z-index:1}
-.ccard .brand{margin-bottom:22px}
-.ccard .number{font-size:24px;letter-spacing:4px;margin-bottom:22px}
-.ccard .bottom .value{letter-spacing:2px}
+#card{position:relative;height:215px;border-radius:18px;border:1px solid rgba(255,255,255,.14);cursor:pointer;perspective:1100px}
+@media(max-width:480px){#card{height:195px}}
+.ccard{overflow:visible;transition:transform .25s ease}
+.ccard:hover{transform:translateY(-3px)}
+.ccard .ccard-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1)}
+.ccard.flipped .ccard-inner{transform:rotateY(180deg)}
+.ccard-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;display:flex;flex-direction:column;padding:22px 20px 20px;border-radius:18px}
+.ccard-face.back{transform:rotateY(180deg);justify-content:space-between}
+.ccard::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(240px 140px at 88% -18%,rgba(255,255,255,.28),transparent 60%)}
+.ccard .brand,.ccard .number,.ccard .bottom,.ccard-back-body{position:relative;z-index:3}
+.ccard .brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.ccard .brand-name{font-size:14px;background:rgba(255,255,255,.16);padding:4px 12px;border-radius:12px}
+.ccard .number{font-size:23px;letter-spacing:3px;font-family:'Courier New',monospace;margin-bottom:20px;word-break:break-all}
+.ccard .bottom{display:flex;justify-content:space-between;gap:20px}
+.ccard .bottom .label{font-size:10px;text-transform:uppercase;opacity:.6}
+.ccard .bottom .value{font-size:14px;letter-spacing:1px;text-transform:uppercase}
+.magstripe{height:40px;background:#0b0f1e;margin:-22px -20px 18px;opacity:.9}
+.ccard-back-body{padding:0 4px 6px}
+.back-row{display:flex;align-items:stretch;gap:14px}
+.sigline{flex:1;background:#fff;border-radius:6px;padding:8px 12px;min-height:46px;display:flex;flex-direction:column;justify-content:flex-end;color:#5b6478}
+.sigline .label{color:#adb5bd;font-size:9px;letter-spacing:1px;margin-bottom:2px}
+.sig{font-family:'Segoe Script','Brush Script MT',cursive;font-size:20px;color:#1c2333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvv-box{background:#eef1f8;color:#1c2333;border-radius:6px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;min-width:66px}
+.cvv-box .label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280}
+.cvv-box .value{font-size:19px;font-family:var(--mono);letter-spacing:3px}
+.back-note{color:rgba(255,255,255,.6);font-size:11px;margin-top:18px;text-align:center}
 .fields-col .fg input,.fields-col select{font-size:15px}</style>
 </head>
 <body>
@@ -201,12 +220,26 @@ a.card .tasks{font-size:13px;color:var(--muted)}
   <div class="preview-col">
   <div class="preview-wrap" id="previewWrap">
     <div class="ccard" id="card">
-      <div class="brand"><span id="brandIcon">💳</span><span class="brand-name" id="brandName">Банковская карта</span></div>
-      <div class="number" id="cardNumberDisplay">•••• •••• •••• ••••</div>
-      <div class="bottom" style="align-items:flex-end">
-        <div><div class="label">Валюта (зад. 6)</div><div class="value" id="currencyDisplay">₽</div></div>
-        <div><div class="label">Владелец</div><div class="value" id="holderDisplay">ИМЯ ФАМИЛИЯ</div></div>
-        <div><div class="label">Срок</div><div class="value" id="expiryDisplay">MM/YY</div></div>
+      <div class="ccard-inner">
+        <div class="ccard-face front">
+          <div class="brand"><span id="brandIcon">💳</span><span class="brand-name" id="brandName">Банковская карта</span></div>
+          <div class="number" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+          <div class="bottom" style="align-items:flex-end">
+            <div><div class="label">Валюта (зад. 6)</div><div class="value" id="currencyDisplay">₽</div></div>
+            <div><div class="label">Владелец</div><div class="value" id="holderDisplay">ИМЯ ФАМИЛИЯ</div></div>
+            <div><div class="label">Срок</div><div class="value" id="expiryDisplay">MM/YY</div></div>
+          </div>
+        </div>
+        <div class="ccard-face back">
+          <div class="magstripe"></div>
+          <div class="ccard-back-body">
+            <div class="back-row">
+              <div class="sigline"><span class="label">Подпись</span><div class="sig" id="cardSignature"></div></div>
+              <div class="cvv-box"><span class="label">CVV</span><span class="value" id="cardCvvDisplay">•••</span></div>
+            </div>
+            <div class="back-note">Нажмите на карту, чтобы перевернуть</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -228,7 +261,7 @@ a.card .tasks{font-size:13px;color:var(--muted)}
     </div>
     <div class="fg">
       <label>CVV (зад. 2 — показывается точками)</label>
-      <input type="text" id="cardCvv" placeholder="•••" maxlength="4">
+      <input type="password" id="cardCvv" placeholder="•••" inputmode="numeric" autocomplete="off">
     </div>
     <div class="fg">
       <label>Валюта (зад. 6)</label>
@@ -240,7 +273,7 @@ a.card .tasks{font-size:13px;color:var(--muted)}
     </div>
   </div>
 
-  <p class="hint">Зад. 7: наведите курсор на карточку или нажмите на неё — добавится 3D-поворот (подтверждение на JS не требуется; transform применяется при наведении/фокусе CVV).</p>
+  <p class="hint">Зад. 7: наведите курсор (лёгкий подъём) или кликните по карточке — она перевернётся и покажет оборот с CVV.</p>
   <div class="output" id="cardLog">Диагностика: введите номер карты, чтобы увидеть определение типа, маску CVV и автопереход фокуса.</div>
   </div>
   </div>
@@ -258,6 +291,8 @@ const expiryDisplay = document.getElementById('expiryDisplay');
 const brandIcon = document.getElementById('brandIcon');
 const brandName = document.getElementById('brandName');
 const currencyDisplay = document.getElementById('currencyDisplay');
+const cvvDisplay = document.getElementById('cardCvvDisplay');
+const signature = document.getElementById('cardSignature');
 const cardLog = document.getElementById('cardLog');
 
 const STORE = 'cardData';
@@ -275,11 +310,13 @@ function getCardType(clean) {
   const two = c.slice(0, 2), four = c.slice(0, 4);
   if (two === '34' || two === '37') return 'amex';
   if (c[0] === '4') return 'visa';
-  if ((two >= '51' && two <= '55') || (two >= '22' && two <= '27')) return 'mastercard';
-  if (c[0] === '2') return 'mir';
   if (two === '62') return 'unionpay'; // зад. 1
+  const fourNum = parseInt(four, 10);
+  if (two === '22' && fourNum >= 2200 && fourNum <= 2204) return 'mir'; // МИР: 2200-2204
+  if ((two >= '51' && two <= '55') || (two >= '22' && two <= '27')) return 'mastercard';
   if (four === '6011' || two === '65') return 'discover';
   if (two === '35') return 'jcb';
+  if (c[0] === '2') return 'mir';
   return 'unknown';
 }
 const CARD_INFO = {
@@ -310,6 +347,8 @@ function updateCard() {
   numberDisplay.textContent = numberInput.value || '•••• •••• •••• ••••';
   holderDisplay.textContent = holderInput.value.trim().toUpperCase() || 'ИМЯ ФАМИЛИЯ';
   expiryDisplay.textContent = expiryInput.value || 'MM/YY';
+  signature.textContent = holderInput.value.trim().toUpperCase() || 'ИМЯ ФАМИЛИЯ';
+  cvvDisplay.textContent = cvvInput.value || '•'.repeat(type === 'amex' ? 4 : 3);
   const maxCvv = type === 'amex' ? 4 : 3;
   cvvInput.maxLength = maxCvv;
   cvvInput.placeholder = '•'.repeat(maxCvv);
@@ -362,28 +401,14 @@ expiryInput.addEventListener('input', function() {
 cvvInput.addEventListener('input', function() {
   const type = getCardType(numberInput.value);
   this.value = this.value.replace(/\D/g, '').slice(0, type === 'amex' ? 4 : 3);
-  // зад. 2: маска точек — храним цифры, показываем точки (поле type=text, маскируем таймером)
-  scheduleMask(this);
+  // зад. 2: поле type=password — браузер показывает точки, значение хранится как цифры
   updateCard(); saveCardData();
-  cardLog.textContent = 'CVV маскируется точками, но хранится как ' + this.value.length + ' цифр (зад. 2).';
+  cardLog.textContent = 'CVV хранится как ' + this.value.length + ' цифр и скрыт (зад. 2).';
 });
-// зад. 7: 3D-анимация
-cvvInput.addEventListener('focus', () => { cardEl.style.transform = 'rotateY(12deg) rotateZ(2deg)'; });
-cvvInput.addEventListener('blur', () => { cardEl.style.transform = ''; });
-cardEl.addEventListener('mouseenter', () => { cardEl.style.transform = 'rotateY(10deg)'; });
-cardEl.addEventListener('mouseleave', () => { cardEl.style.transform = ''; });
-cardEl.addEventListener('click', () => { cardEl.classList.toggle('flipped'); });
-
-// backend 2: маска CVV (показываем точки вместо цифр на короткое время)
-let maskTimer = null;
-function scheduleMask(el) {
-  if (maskTimer) { clearTimeout(maskTimer); maskTimer = null; }
-  el.dataset.real = el.value;
-  if (el.value) {
-    el.value = '•'.repeat(el.value.length);
-    maskTimer = setTimeout(() => { el.value = el.dataset.real || ''; }, 900);
-  }
-}
+// зад. 7: 3D-анимация — клик переворачивает карту (лицевая/задняя грань)
+cardEl.addEventListener('click', function() {
+  this.classList.toggle('flipped');
+});
 
 // ===== theme toggle (зад. 4) =====
 document.getElementById('themeToggle').addEventListener('click', function() {
